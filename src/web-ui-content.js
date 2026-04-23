@@ -182,6 +182,78 @@ const DOC_FIELDS_EN = `
 </tbody>
 </table>`;
 
+const DOC_INSTALL_RU = `
+<h2 id="install">2. Чистая установка</h2>
+<p>Проект рассчитан на локальный запуск из Node.js и работает без Docker. Для чистой машины нужен <code>Node.js 18+</code> и <code>npm</code>.</p>
+<h3>Linux / macOS</h3>
+<pre><code>git clone https://github.com/AlekseiSeleznev/ssh-mcp-universal.git
+cd ssh-mcp-universal
+npm install
+npm run codex:register   # только если используете Codex
+</code></pre>
+<h3>Windows PowerShell</h3>
+<pre><code>git clone https://github.com/AlekseiSeleznev/ssh-mcp-universal.git
+cd ssh-mcp-universal
+npm install
+npm run codex:register   # только если используете Codex
+</code></pre>
+<p><code>npm run codex:register</code> создаёт или обновляет <code>~/.codex/config.toml</code> и создаёт стартовый <code>~/.codex/ssh-config.toml</code>, если его ещё нет.</p>
+<ul>
+<li>standalone dashboard: <code>npm run dashboard:start</code></li>
+<li>stdio MCP runtime запускается самим MCP-клиентом через <code>node /abs/path/to/src/index.js</code></li>
+<li>локальный файл серверов по умолчанию: <code>~/.codex/ssh-config.toml</code></li>
+<li>на Linux для native folder chooser нужен один из: <code>zenity</code>, <code>qarma</code>, <code>yad</code>, <code>kdialog</code></li>
+<li>на Windows chooser использует встроенный PowerShell dialog и не требует внешних пакетов</li>
+</ul>`;
+
+const DOC_INSTALL_EN = `
+<h2 id="install">2. Clean Install</h2>
+<p>This project runs locally on Node.js and does not require Docker. A fresh machine needs <code>Node.js 18+</code> and <code>npm</code>.</p>
+<h3>Linux / macOS</h3>
+<pre><code>git clone https://github.com/AlekseiSeleznev/ssh-mcp-universal.git
+cd ssh-mcp-universal
+npm install
+npm run codex:register   # only if you use Codex
+</code></pre>
+<h3>Windows PowerShell</h3>
+<pre><code>git clone https://github.com/AlekseiSeleznev/ssh-mcp-universal.git
+cd ssh-mcp-universal
+npm install
+npm run codex:register   # only if you use Codex
+</code></pre>
+<p><code>npm run codex:register</code> creates or updates <code>~/.codex/config.toml</code> and creates a starter <code>~/.codex/ssh-config.toml</code> if it does not exist yet.</p>
+<ul>
+<li>standalone dashboard: <code>npm run dashboard:start</code></li>
+<li>the stdio MCP runtime is launched by the MCP client via <code>node /abs/path/to/src/index.js</code></li>
+<li>default local server inventory: <code>~/.codex/ssh-config.toml</code></li>
+<li>on Linux the native folder chooser needs one of: <code>zenity</code>, <code>qarma</code>, <code>yad</code>, <code>kdialog</code></li>
+<li>on Windows the chooser uses the built-in PowerShell folder dialog and needs no extra packages</li>
+</ul>`;
+
+const DOC_AGENT_PROTOCOL_RU = `
+<h2 id="ai-rules">3. Правила для AI-клиента</h2>
+<p>В Codex нет отдельного поля MCP-конфига для таких правил, поэтому проект публикует их в трёх местах: в <code>README.md</code>, в runbook-файлах <code>CODEX.md</code> / <code>AGENTS.md</code> и в MCP prompt <code>ssh_agent_protocol</code>.</p>
+<ul>
+<li>Если пользователь называет SSH-соединение по имени, AI должен сначала проверить его через <code>ssh_list_servers</code>.</li>
+<li>Если имя найдено, все дальнейшие действия по этому серверу делаются через <code>ssh-universal</code>, а не через выдуманные raw ssh команды.</li>
+<li>Если имя не найдено, AI должен честно сказать, что такого соединения нет в <code>ssh-config.toml</code> / dashboard.</li>
+<li>Если пользователь просит «подключиться», «проверить доступ» или «переподключиться», базовый шаг — <code>ssh_connection_status action="reconnect"</code>.</li>
+<li>Если SSH trust не пройден, AI должен использовать <code>ssh_key_manage</code> для проверки и спрашивать явное подтверждение перед <code>accept</code>.</li>
+<li>Fallback на локальную оболочку или придуманные ответы запрещён.</li>
+</ul>`;
+
+const DOC_AGENT_PROTOCOL_EN = `
+<h2 id="ai-rules">3. AI Client Rules</h2>
+<p>Codex currently has no dedicated MCP-config field for these rules, so the project publishes them in three places: <code>README.md</code>, the runbooks <code>CODEX.md</code> / <code>AGENTS.md</code>, and the MCP prompt <code>ssh_agent_protocol</code>.</p>
+<ul>
+<li>If the user names an SSH connection, the AI must check it first with <code>ssh_list_servers</code>.</li>
+<li>If the name exists, every follow-up action for that host must go through <code>ssh-universal</code>, not imagined raw ssh commands.</li>
+<li>If the name does not exist, the AI must say so plainly instead of inventing a host.</li>
+<li>If the user asks to connect, verify access, or reconnect, the base action is <code>ssh_connection_status action="reconnect"</code>.</li>
+<li>If SSH trust fails, the AI should use <code>ssh_key_manage</code> and ask for explicit confirmation before <code>accept</code>.</li>
+<li>Falling back to local shell guesses or fabricated remote output is forbidden.</li>
+</ul>`;
+
 export const DOCS_HTML = {
   ru: `<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${PROJECT_NAME} — Документация</title><style>${DOC_STYLE}</style></head><body>
 <a class="back" href="/dashboard?lang=ru">&larr; Dashboard</a>
@@ -191,13 +263,15 @@ export const DOCS_HTML = {
 <h2>Оглавление</h2>
 <ul>
 <li><a href="#overview">1. Обзор</a></li>
-<li><a href="#runtime">2. Режим работы</a></li>
-<li><a href="#dashboard">3. Dashboard</a></li>
-<li><a href="#fields">4. Поля подключения</a></li>
-<li><a href="#picker">5. Загрузка ключа и picker</a></li>
-<li><a href="#env">6. Переменные окружения</a></li>
-<li><a href="#api">7. API endpoints</a></li>
-<li><a href="#diagnostics">8. Диагностика</a></li>
+<li><a href="#install">2. Чистая установка</a></li>
+<li><a href="#ai-rules">3. Правила для AI-клиента</a></li>
+<li><a href="#runtime">4. Режим работы</a></li>
+<li><a href="#dashboard">5. Dashboard</a></li>
+<li><a href="#fields">6. Поля подключения</a></li>
+<li><a href="#picker">7. Загрузка ключа и picker</a></li>
+<li><a href="#env">8. Переменные окружения</a></li>
+<li><a href="#api">9. API endpoints</a></li>
+<li><a href="#diagnostics">10. Диагностика</a></li>
 </ul>
 
 <h2 id="overview">1. Обзор</h2>
@@ -210,11 +284,15 @@ export const DOCS_HTML = {
 <li>Даёт RU/EN dashboard и RU/EN docs по тому же URL-space</li>
 </ul>
 
-<h2 id="runtime">2. Режим работы</h2>
+${DOC_INSTALL_RU}
+
+${DOC_AGENT_PROTOCOL_RU}
+
+<h2 id="runtime">4. Режим работы</h2>
 <p>Основной сценарий — standalone dashboard через <code>npm run dashboard:start</code> или бинарник <code>ssh-manager-dashboard</code>. Это отдельный HTTP-процесс, который использует тот же service-layer, что и embedded-mode.</p>
 <p>Embedded режим остаётся opt-in и включается только через <code>SSH_DASHBOARD_EMBEDDED=true</code> внутри stdio MCP процесса.</p>
 
-<h2 id="dashboard">3. Dashboard</h2>
+<h2 id="dashboard">5. Dashboard</h2>
 <p>Верхняя панель повторяет контракт <code>postgres-mcp-universal</code>: переключатель языка, кнопка документации и кнопка обновления. Основная область разделена на две колонки:</p>
 <ul>
 <li>слева список серверов со статусами проверки, auth type и platform badges</li>
@@ -222,20 +300,20 @@ export const DOCS_HTML = {
 </ul>
 <p>В карточке сервера доступны действия <code>Проверить</code>, <code>Изменить</code> и <code>Удалить</code>. В форме нового подключения и в edit modal поток теперь такой же, как в <code>nifi-universal</code>: сначала можно проверить черновик без записи, затем отдельно сохранить подключение в TOML.</p>
 
-<h2 id="fields">4. Поля подключения</h2>
+<h2 id="fields">6. Поля подключения</h2>
 ${DOC_FIELDS_RU}
 
-<h2 id="picker">5. Загрузка ключа и picker</h2>
+<h2 id="picker">7. Загрузка ключа и picker</h2>
 <p>SSH ключ теперь выбирается как в <code>nifi-universal</code>: через нативный браузерный <code>file input</code>. Dashboard сохраняет загруженный приватный ключ в свой managed storage на хосте gateway и записывает итоговый путь в TOML.</p>
 <ul>
 <li>upload используется для приватного ключа</li>
-<li>для поля <code>Рабочая директория</code> кнопка <code>Обзор...</code> открывает нативный системный dialog на хосте dashboard</li>
+<li>для поля <code>Рабочая директория</code> кнопка <code>Обзор...</code> открывает нативный системный dialog на хосте dashboard: Linux chooser через <code>zenity/qarma/yad/kdialog</code>, Windows chooser через PowerShell FolderBrowserDialog</li>
 <li>навигация ограничена <code>SSH_DASHBOARD_ALLOWED_ROOTS</code></li>
 <li>при пустом пути dialog стартует с первого разрешённого root</li>
 <li>по умолчанию загруженные ключи сохраняются в <code>~/.ssh-manager/dashboard-keys/&lt;server-name&gt;/</code></li>
 </ul>
 
-<h2 id="env">6. Переменные окружения</h2>
+<h2 id="env">8. Переменные окружения</h2>
 <ul>
 <li><code>SSH_DASHBOARD_HOST</code> — host для HTTP сервера, по умолчанию <code>127.0.0.1</code></li>
 <li><code>SSH_DASHBOARD_PORT</code> — порт dashboard, по умолчанию <code>8791</code></li>
@@ -245,7 +323,7 @@ ${DOC_FIELDS_RU}
 <li><code>SSH_CONFIG_PATH</code> — путь к TOML-файлу с секцией <code>[ssh_servers.*]</code></li>
 </ul>
 
-<h2 id="api">7. API endpoints</h2>
+<h2 id="api">9. API endpoints</h2>
 <table>
 <thead><tr><th>Endpoint</th><th>Метод</th><th>Назначение</th></tr></thead>
 <tbody>
@@ -263,12 +341,13 @@ ${DOC_FIELDS_RU}
 </tbody>
 </table>
 
-<h2 id="diagnostics">8. Диагностика</h2>
+<h2 id="diagnostics">10. Диагностика</h2>
 <ul>
 <li>Проверьте <code>curl http://127.0.0.1:8791/dashboard</code></li>
 <li>Проверьте <code>curl http://127.0.0.1:8791/dashboard/docs?lang=en</code></li>
 <li>Если dashboard слушает внешний интерфейс, без <code>SSH_DASHBOARD_API_KEY</code> он должен намеренно не стартовать</li>
 <li>При сохранении TOML создаётся backup <code>*.bak</code>, итоговый файл сохраняется с правами <code>0600</code></li>
+<li>Для Linux folder chooser нужны <code>zenity</code>, <code>qarma</code>, <code>yad</code> или <code>kdialog</code>; на Windows используется встроенный PowerShell dialog</li>
 <li>Ошибки SSH test кешируются в status summary и показываются в карточке сервера</li>
 </ul>
 
@@ -282,13 +361,15 @@ ${DOC_FIELDS_RU}
 <h2>Contents</h2>
 <ul>
 <li><a href="#overview">1. Overview</a></li>
-<li><a href="#runtime">2. Runtime Model</a></li>
-<li><a href="#dashboard">3. Dashboard</a></li>
-<li><a href="#fields">4. Connection Fields</a></li>
-<li><a href="#picker">5. Key Upload and Picker</a></li>
-<li><a href="#env">6. Environment Variables</a></li>
-<li><a href="#api">7. API Endpoints</a></li>
-<li><a href="#diagnostics">8. Diagnostics</a></li>
+<li><a href="#install">2. Clean Install</a></li>
+<li><a href="#ai-rules">3. AI Client Rules</a></li>
+<li><a href="#runtime">4. Runtime Model</a></li>
+<li><a href="#dashboard">5. Dashboard</a></li>
+<li><a href="#fields">6. Connection Fields</a></li>
+<li><a href="#picker">7. Key Upload and Picker</a></li>
+<li><a href="#env">8. Environment Variables</a></li>
+<li><a href="#api">9. API Endpoints</a></li>
+<li><a href="#diagnostics">10. Diagnostics</a></li>
 </ul>
 
 <h2 id="overview">1. Overview</h2>
@@ -301,11 +382,15 @@ ${DOC_FIELDS_RU}
 <li>Ships both RU and EN variants for dashboard and docs</li>
 </ul>
 
-<h2 id="runtime">2. Runtime Model</h2>
+${DOC_INSTALL_EN}
+
+${DOC_AGENT_PROTOCOL_EN}
+
+<h2 id="runtime">4. Runtime Model</h2>
 <p>The recommended path is the standalone dashboard via <code>npm run dashboard:start</code> or <code>ssh-manager-dashboard</code>. It runs as a dedicated HTTP process while reusing the same dashboard service layer as the MCP runtime.</p>
 <p>Embedded mode stays opt-in and is enabled only when <code>SSH_DASHBOARD_EMBEDDED=true</code>.</p>
 
-<h2 id="dashboard">3. Dashboard</h2>
+<h2 id="dashboard">5. Dashboard</h2>
 <p>The top bar matches the <code>postgres-mcp-universal</code> dashboard contract: language switcher, documentation button, and refresh action. The main view is split into two columns:</p>
 <ul>
 <li>left: saved server cards with verification status, auth type, and platform badges</li>
@@ -313,20 +398,20 @@ ${DOC_FIELDS_RU}
 </ul>
 <p>Each saved server exposes <code>Test</code>, <code>Edit</code>, and <code>Delete</code>. The new-connection form and edit modal now mirror <code>nifi-universal</code>: you can test the draft first without writing TOML, then save the connection separately.</p>
 
-<h2 id="fields">4. Connection Fields</h2>
+<h2 id="fields">6. Connection Fields</h2>
 ${DOC_FIELDS_EN}
 
-<h2 id="picker">5. Key Upload and Picker</h2>
+<h2 id="picker">7. Key Upload and Picker</h2>
 <p>The SSH key now follows the same pattern as <code>nifi-universal</code>: a native browser <code>file input</code>. The dashboard stores the uploaded private key in managed storage on the gateway host and writes the resulting path to TOML.</p>
 <ul>
 <li>browser upload is used for the private key</li>
-<li>the <code>Browse...</code> button for <code>Working Directory</code> opens a native OS dialog on the dashboard host</li>
+<li>the <code>Browse...</code> button for <code>Working Directory</code> opens a native OS dialog on the dashboard host: Linux via <code>zenity/qarma/yad/kdialog</code>, Windows via the built-in PowerShell FolderBrowserDialog</li>
 <li>navigation is restricted by <code>SSH_DASHBOARD_ALLOWED_ROOTS</code></li>
 <li>when the field is empty, the dialog starts at the first allowed root</li>
 <li>uploaded keys are stored under <code>~/.ssh-manager/dashboard-keys/&lt;server-name&gt;/</code> by default</li>
 </ul>
 
-<h2 id="env">6. Environment Variables</h2>
+<h2 id="env">8. Environment Variables</h2>
 <ul>
 <li><code>SSH_DASHBOARD_HOST</code> — HTTP host, default <code>127.0.0.1</code></li>
 <li><code>SSH_DASHBOARD_PORT</code> — dashboard port, default <code>8791</code></li>
@@ -336,7 +421,7 @@ ${DOC_FIELDS_EN}
 <li><code>SSH_CONFIG_PATH</code> — TOML file path containing <code>[ssh_servers.*]</code></li>
 </ul>
 
-<h2 id="api">7. API Endpoints</h2>
+<h2 id="api">9. API Endpoints</h2>
 <table>
 <thead><tr><th>Endpoint</th><th>Method</th><th>Purpose</th></tr></thead>
 <tbody>
@@ -354,12 +439,13 @@ ${DOC_FIELDS_EN}
 </tbody>
 </table>
 
-<h2 id="diagnostics">8. Diagnostics</h2>
+<h2 id="diagnostics">10. Diagnostics</h2>
 <ul>
 <li>Check <code>curl http://127.0.0.1:8791/dashboard</code></li>
 <li>Check <code>curl http://127.0.0.1:8791/dashboard/docs?lang=en</code></li>
 <li>The server intentionally refuses to start on a non-loopback host without <code>SSH_DASHBOARD_API_KEY</code></li>
 <li>Saving TOML creates a <code>*.bak</code> backup and writes the final file with <code>0600</code> permissions</li>
+<li>Linux folder chooser needs <code>zenity</code>, <code>qarma</code>, <code>yad</code>, or <code>kdialog</code>; Windows uses the built-in PowerShell dialog</li>
 <li>SSH test failures are cached and shown in server cards/status summary</li>
 </ul>
 

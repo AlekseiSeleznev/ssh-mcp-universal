@@ -184,15 +184,17 @@ await test('saveToToml writes 0600 file and keeps a backup of previous contents'
 
 await test('saveToCodexConfig writes absolute index.js path', async () => {
   const tempDir = createTempDir();
-  const codexConfigPath = path.join(tempDir, 'config.toml');
+  const codexConfigPath = path.join(tempDir, '.codex', 'config.toml');
   const loader = new ConfigLoader();
   const expectedIndexPath = fileURLToPath(new URL('../src/index.js', import.meta.url));
+  const expectedSshConfigPath = path.join(tempDir, '.codex', 'ssh-config.toml');
 
-  await loader.saveToCodexConfig(codexConfigPath);
+  await loader.saveToCodexConfig(codexConfigPath, { sshConfigPath: expectedSshConfigPath });
 
   const content = fs.readFileSync(codexConfigPath, 'utf8');
   assertTrue(content.includes(expectedIndexPath), 'Should write the package absolute index.js path');
   assertTrue(content.includes('[mcp_servers.ssh-universal]'), 'Should write the new ssh-universal MCP identifier');
+  assertTrue(content.includes(expectedSshConfigPath), 'Should persist the selected SSH config path');
   assertTrue(!content.includes('[mcp_servers.ssh-manager]'), 'Should not keep the legacy ssh-manager MCP identifier');
 
   fs.rmSync(tempDir, { recursive: true, force: true });

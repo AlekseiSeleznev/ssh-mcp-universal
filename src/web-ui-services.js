@@ -127,11 +127,57 @@ function runProcess(command, args, options = {}) {
   });
 }
 
-async function nativeDirectoryDialogRunner(initialPath) {
+function escapeForPowerShellSingleQuoted(input = '') {
+  return input.replace(/'/g, "''");
+}
+
+function buildWindowsDirectoryDialogScript(initialPath) {
+  const escapedInitialPath = escapeForPowerShellSingleQuoted(initialPath);
+  return [
+    'Add-Type -AssemblyName System.Windows.Forms',
+    '$dialog = New-Object System.Windows.Forms.FolderBrowserDialog',
+    '$dialog.Description = "Select Working Directory"',
+    '$dialog.ShowNewFolderButton = $true',
+    `$dialog.SelectedPath = '${escapedInitialPath}'`,
+    'if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {',
+    '  Write-Output $dialog.SelectedPath',
+    '  exit 0',
+    '}',
+    'exit 1',
+  ].join('; ');
+}
+
+function buildMacDirectoryDialogScript(initialPath) {
+  const escapedInitialPath = initialPath.replace(/"/g, '\\"');
+  return [
+    'set chosenFolder to choose folder with prompt "Select Working Directory" default location POSIX file "' + escapedInitialPath + '"',
+    'POSIX path of chosenFolder',
+  ];
+}
+
+export function buildNativeDirectoryDialogStrategies(initialPath = '', platform = process.platform) {
   const candidatePath = expandLocalPath(initialPath || os.homedir());
   const trailingPath = candidatePath.endsWith(path.sep) ? candidatePath : `${candidatePath}${path.sep}`;
 
-  const dialogCommands = [
+  if (platform === 'win32') {
+    return [
+      {
+        command: 'powershell',
+        args: ['-NoProfile', '-STA', '-Command', buildWindowsDirectoryDialogScript(candidatePath)],
+      },
+    ];
+  }
+
+  if (platform === 'darwin') {
+    return [
+      {
+        command: 'osascript',
+        args: buildMacDirectoryDialogScript(candidatePath).flatMap((line) => ['-e', line]),
+      },
+    ];
+  }
+
+  return [
     {
       command: 'zenity',
       args: ['--file-selection', '--directory', '--title=Select Working Directory', `--filename=${trailingPath}`],
@@ -149,11 +195,20 @@ async function nativeDirectoryDialogRunner(initialPath) {
       args: ['--getexistingdirectory', candidatePath],
     },
   ];
+}
+
+async function nativeDirectoryDialogRunner(initialPath, {
+  platform = process.platform,
+  processRunner = runProcess,
+} = {}) {
+  const dialogCommands = [
+    ...buildNativeDirectoryDialogStrategies(initialPath, platform),
+  ];
 
   let lastError = null;
   for (const dialogCommand of dialogCommands) {
     try {
-      const result = await runProcess(dialogCommand.command, dialogCommand.args, {
+      const result = await processRunner(dialogCommand.command, dialogCommand.args, {
         env: { ...process.env, DISPLAY: process.env.DISPLAY || ':0' },
       });
       if (result.code === 0) {

@@ -1,10 +1,10 @@
 # OpenAI Codex SSH Configuration Example
-# Place this file at: ~/.codex/ssh-config.toml
+# Linux/macOS default path: ~/.codex/ssh-config.toml
+# Windows default path: %USERPROFILE%\.codex\ssh-config.toml
 #
-# This file contains SSH server configurations for MCP SSH Manager
-# when used with OpenAI Codex.
-#
-# For Claude Code users: use the legacy .env-style server variables instead
+# This file contains the named SSH connections used by ssh-mcp-universal.
+# Codex and other MCP clients launch the server separately; this TOML is only
+# the inventory of saved SSH connections.
 
 # Production Server Example (using SSH key - RECOMMENDED)
 [ssh_servers.production]

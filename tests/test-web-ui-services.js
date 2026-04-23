@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
-import { browseLocalPath, chooseLocalDirectoryWithOsDialog, connectFromBody, deleteFromBody, editFromBody, expandLocalPath, isPathWithinAllowedRoots, normalizeServerInput, testDraftFromBody, testFromBody, validateServerInput } from '../src/web-ui-services.js';
+import { browseLocalPath, buildNativeDirectoryDialogStrategies, chooseLocalDirectoryWithOsDialog, connectFromBody, deleteFromBody, editFromBody, expandLocalPath, isPathWithinAllowedRoots, normalizeServerInput, testDraftFromBody, testFromBody, validateServerInput } from '../src/web-ui-services.js';
 
 const GREEN = '\x1b[32m';
 const RED = '\x1b[31m';
@@ -468,6 +468,22 @@ await test('chooseLocalDirectoryWithOsDialog rejects selections outside allowed 
   if (!threw) {
     throw new Error('Expected native directory chooser to reject outside path');
   }
+});
+
+await test('buildNativeDirectoryDialogStrategies includes PowerShell chooser on Windows', async () => {
+  const strategies = buildNativeDirectoryDialogStrategies('C:\\Work', 'win32');
+
+  assertEqual(strategies[0].command, 'powershell', 'Windows strategy should use PowerShell');
+  assertTrue(strategies[0].args.includes('-STA'), 'Windows strategy should run in STA mode');
+  assertTrue(strategies[0].args.some((arg) => String(arg).includes('FolderBrowserDialog')), 'Windows strategy should use FolderBrowserDialog');
+});
+
+await test('buildNativeDirectoryDialogStrategies includes Linux GUI choosers on Linux', async () => {
+  const strategies = buildNativeDirectoryDialogStrategies('/tmp/project', 'linux');
+  const commands = strategies.map((strategy) => strategy.command);
+
+  assertEqual(commands[0], 'zenity', 'Linux strategy should prefer zenity first');
+  assertTrue(commands.includes('kdialog'), 'Linux strategy should include kdialog fallback');
 });
 
 console.log('\n' + '='.repeat(60));

@@ -162,6 +162,7 @@ import {
 import { loadToolConfig, isToolEnabled } from './tool-config-manager.js';
 import { createDashboardService } from './dashboard-service.js';
 import { startDashboardServer } from './web-ui-server.js';
+import { SSH_AGENT_PROTOCOL_TEXT, SSH_MCP_DESCRIPTION } from './agent-protocol.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -208,7 +209,7 @@ const envFilePath = resolveEnvFilePath();
 dotenv.config({ path: envFilePath });
 
 // Initialize logger
-logger.info('MCP SSH Manager starting', {
+logger.info('ssh-mcp-universal starting', {
   logLevel: process.env.SSH_LOG_LEVEL || 'INFO',
   verbose: process.env.SSH_VERBOSE === 'true',
   envFilePath
@@ -586,9 +587,31 @@ const dashboardService = createDashboardService({
 const server = new McpServer({
   name: 'ssh-universal',
   version: '1.2.0',
+  description: SSH_MCP_DESCRIPTION,
+  websiteUrl: 'https://github.com/AlekseiSeleznev/ssh-mcp-universal',
 });
 
 logger.info('MCP Server initialized', { version: '1.2.0' });
+
+server.registerPrompt(
+  'ssh_agent_protocol',
+  {
+    title: 'SSH Agent Protocol',
+    description: 'Routing and safety rules for named SSH connections and SSH operations.',
+  },
+  async () => ({
+    description: 'Read this before handling named SSH connection requests through ssh-universal.',
+    messages: [
+      {
+        role: 'user',
+        content: {
+          type: 'text',
+          text: SSH_AGENT_PROTOCOL_TEXT,
+        },
+      },
+    ],
+  })
+);
 
 /**
  * Helper function to conditionally register tools based on configuration
@@ -4727,7 +4750,7 @@ async function main() {
   console.error('🚀 SSH MCP Universal Server started');
   console.error(`📦 Profile: ${activeProfile}`);
   console.error(`🖥️  Available servers: ${serverList.length > 0 ? serverList.join(', ') : 'none configured'}`);
-  console.error('💡 Use server-manager.py to configure servers');
+  console.error(`💡 Configure servers in ${configLoader.getTomlPath()} or via the dashboard`);
   console.error('🔄 Connection management: Auto-reconnect enabled, 30min timeout');
   if (dashboardEnabled) {
     console.error(`🌐 Dashboard: http://${process.env.SSH_DASHBOARD_HOST || '127.0.0.1'}:${Number(process.env.SSH_DASHBOARD_PORT || 8791)}/dashboard`);

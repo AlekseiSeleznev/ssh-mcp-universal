@@ -4,6 +4,9 @@
     "ssh-universal": {
       "command": "node",
       "args": ["/path/to/ssh-mcp-universal/src/index.js"],
+      "env": {
+        "SSH_CONFIG_PATH": "/path/to/ssh-config.toml"
+      },
       "autoApprove": [
         "mcp__ssh-universal__ssh_execute",
         "mcp__ssh-universal__ssh_list_servers",

@@ -3,7 +3,7 @@
 # Quick validation script to check code quality
 # Can be run manually or in CI/CD
 
-echo "🔍 MCP SSH Manager - Code Validation"
+echo "🔍 ssh-mcp-universal - Code Validation"
 echo "====================================="
 echo ""
 

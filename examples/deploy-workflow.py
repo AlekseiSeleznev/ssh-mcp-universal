@@ -1,18 +1,11 @@
 #!/usr/bin/env python3
-"""
-Example deployment workflow using MCP SSH Manager
-This script demonstrates how to automate deployments similar to the ERPNext scenario
-"""
-
-import os
-import sys
 import json
-from pathlib import Path
+"""
+Static examples for building ssh_deploy payloads.
 
-# Add parent directory to path to import tools
-sys.path.insert(0, str(Path(__file__).parent.parent / 'tools'))
-
-from server_manager import load_env_config, test_server_connection
+This file intentionally has no runtime dependency on the old tools/ Python stack.
+Use it as a reference for MCP payload shape, not as an installer or server manager.
+"""
 
 def create_deployment_config(server_name, files, options=None):
     """
@@ -131,18 +124,12 @@ def main():
     Demonstrate various deployment scenarios
     """
     
-    print("🚀 MCP SSH Manager - Deployment Examples")
+    print("🚀 ssh-mcp-universal - Deployment Examples")
     print("=" * 50)
     print()
     
-    # Check if server configuration exists
-    servers = load_env_config()
-    
-    if not servers:
-        print("⚠️ No servers configured. Run 'python tools/server_manager.py' to add servers.")
-        return
-    
-    print("📋 Available servers:", ", ".join(servers.keys()))
+    print("📋 Server names come from ssh-config.toml / dashboard")
+    print("💡 Replace the example connection names below with your real saved connections")
     print()
     
     # Example 1: ERPNext deployment (like the user's scenario)
@@ -163,7 +150,7 @@ def main():
     deploy_configuration_files()
     print()
     
-    print("💡 Tips for using in Claude Code:")
+    print("💡 Tips for using in Claude Code / Codex:")
     print("-" * 30)
     print("1. Create server aliases for easier access:")
     print('   "Create alias dmis for dmis_server"')

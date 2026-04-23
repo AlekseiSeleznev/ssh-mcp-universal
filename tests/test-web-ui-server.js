@@ -239,6 +239,8 @@ await test('dashboard routes render HTML and API key protects mutations', async 
     assertTrue(docsHtml.includes('ssh-mcp-universal'), 'Docs should render project title');
     assertTrue(docsHtml.includes('MCP Gateway for SSH'), 'Docs should render English subtitle');
     assertTrue(docsHtml.includes('native browser <code>file input</code>'), 'Docs should describe upload-based SSH key selection');
+    assertTrue(docsHtml.includes('PowerShell FolderBrowserDialog'), 'Docs should mention Windows native directory chooser');
+    assertTrue(docsHtml.includes('ssh_agent_protocol'), 'Docs should mention the MCP routing prompt');
 
     const notFound = await fetch(`${baseUrl}/missing`);
     const notFoundBody = await notFound.text();
