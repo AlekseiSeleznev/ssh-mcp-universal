@@ -1,6 +1,10 @@
+const PROJECT_NAME = 'ssh-mcp-universal';
+const REPO_URL = 'https://github.com/AlekseiSeleznev/ssh-mcp-universal';
+const LICENSE_URL = `${REPO_URL}/blob/main/LICENSE`;
+
 export const APP_TITLE = {
-  ru: 'MCP-шлюз для SSH',
-  en: 'MCP Gateway for SSH'
+  ru: PROJECT_NAME,
+  en: PROJECT_NAME
 };
 
 export const _T = {
@@ -14,14 +18,14 @@ export const _T = {
     port: 'Порт',
     login: 'Логин',
     password: 'Пароль',
-    key_path: 'Путь к ключу',
+    key_path: 'SSH ключ',
     passphrase: 'Passphrase',
     default_dir: 'Рабочая директория',
     proxy_jump: 'ProxyJump',
     platform: 'Платформа',
     description: 'Описание',
     sudo_password: 'Sudo пароль',
-    btn_connect: 'Сохранить и проверить',
+    btn_connect: 'Подключить',
     btn_save: 'Сохранить',
     btn_cancel: 'Отмена',
     btn_refresh: 'Обновить',
@@ -31,6 +35,9 @@ export const _T = {
     btn_docs: 'Документация',
     btn_browse: 'Обзор...',
     btn_clear: 'Очистить',
+    key_upload_hint: 'Загрузите приватный ключ из браузера. Dashboard сохранит его на своём хосте и запишет управляемый путь в TOML.',
+    key_replace_hint: 'Загрузите новый файл, если нужно заменить уже сохранённый ключ.',
+    key_current: 'Текущий ключ',
     btn_up: 'Вверх',
     btn_select_dir: 'Выбрать эту папку',
     status_ok: 'Проверено',
@@ -43,7 +50,7 @@ export const _T = {
     confirm_delete: 'Удалить сервер',
     confirm_delete_text: 'Конфигурация будет удалена из TOML.',
     fill_fields: 'Заполните обязательные поля: имя, сервер, логин',
-    msg_connected: 'Сервер сохранён и проверен',
+    msg_connected: 'Подключено',
     msg_saved: 'Сохранено',
     msg_deleted: 'Удалено',
     msg_test_ok: 'Подключение успешно',
@@ -72,23 +79,26 @@ export const _T = {
     port: 'Port',
     login: 'Login',
     password: 'Password',
-    key_path: 'Key Path',
+    key_path: 'SSH Key',
     passphrase: 'Passphrase',
     default_dir: 'Working Directory',
     proxy_jump: 'ProxyJump',
     platform: 'Platform',
     description: 'Description',
     sudo_password: 'Sudo Password',
-    btn_connect: 'Save and Test',
+    btn_connect: 'Connect',
     btn_save: 'Save',
     btn_cancel: 'Cancel',
     btn_refresh: 'Refresh',
     btn_edit: 'Edit',
     btn_delete: 'Delete',
     btn_test: 'Test',
-    btn_docs: 'Docs',
+    btn_docs: 'Documentation',
     btn_browse: 'Browse...',
     btn_clear: 'Clear',
+    key_upload_hint: 'Upload a private key from the browser. The dashboard stores it on its host and writes the managed path to TOML.',
+    key_replace_hint: 'Upload a new file only if you want to replace the stored key.',
+    key_current: 'Current key',
     btn_up: 'Up',
     btn_select_dir: 'Select This Folder',
     status_ok: 'Verified',
@@ -101,7 +111,7 @@ export const _T = {
     confirm_delete: 'Delete server',
     confirm_delete_text: 'The TOML configuration entry will be removed.',
     fill_fields: 'Fill required fields: name, server, login',
-    msg_connected: 'Server saved and verified',
+    msg_connected: 'Connected',
     msg_saved: 'Saved',
     msg_deleted: 'Deleted',
     msg_test_ok: 'Connection successful',
@@ -125,14 +135,14 @@ export const _T = {
 const DOC_STYLE = `body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;padding:20px;max-width:920px;margin:0 auto;line-height:1.6;font-size:.88rem}
 a{color:#38bdf8;text-decoration:none}a:hover{text-decoration:underline}
 h1{font-size:1.3rem;margin-bottom:4px}h2{font-size:1rem;margin-top:24px;margin-bottom:8px;color:#f8fafc;border-bottom:1px solid #334155;padding-bottom:4px}
-.sub{color:#64748b;font-size:.78rem}code{background:#1e293b;padding:1px 5px;border-radius:3px;font-size:.82rem;color:#38bdf8}
+h3{font-size:.88rem;margin-top:16px;margin-bottom:4px;color:#cbd5e1}.sub{color:#64748b;font-size:.78rem}code{background:#1e293b;padding:1px 5px;border-radius:3px;font-size:.82rem;color:#38bdf8}
 pre{background:#1e293b;padding:12px;border-radius:6px;overflow-x:auto;font-size:.8rem;border:1px solid #334155;margin:8px 0}
 .back{display:inline-block;margin-bottom:16px;font-size:.82rem}ul{margin:4px 0 4px 20px}li{margin:2px 0}
 table{width:100%;border-collapse:collapse;margin:10px 0 16px;border:1px solid #334155}
 th,td{border:1px solid #334155;padding:8px 10px;vertical-align:top;text-align:left}
 th{background:#1e293b;color:#f8fafc;font-size:.76rem}
 td{font-size:.82rem}
-.req{color:#facc15;font-weight:600}.muted{color:#94a3b8}`;
+.req{color:#facc15;font-weight:600}.muted{color:#94a3b8}.footer-note{margin-top:28px;padding-top:12px;border-top:1px solid #334155;color:#64748b;font-size:.78rem}`;
 
 const DOC_FIELDS_RU = `
 <table>
@@ -144,7 +154,7 @@ const DOC_FIELDS_RU = `
 <tr><td><code>Порт</code></td><td>Когда SSH работает не на <code>22</code></td><td>TCP-порт SSH-сервера.</td><td><code>2204</code></td><td>Если оставить пустым, сервер сохранится с дефолтным значением или тем, что подставлено в форме.</td></tr>
 <tr><td><code>Логин</code> <span class="req">*</span></td><td>Всегда</td><td>Пользователь SSH, от имени которого выполняются команды и открываются сессии.</td><td><code>seleznev</code>, <code>ubuntu</code></td><td>Это именно SSH user, а не имя базы данных и не Windows domain account в формате RDP.</td></tr>
 <tr><td><code>Пароль</code></td><td>Когда сервер использует password auth</td><td>SSH-пароль пользователя.</td><td><code>secret123</code></td><td>Не требуется, если вход идёт по ключу или через уже загруженный SSH agent.</td></tr>
-<tr><td><code>Путь к ключу</code></td><td>Когда сервер использует key auth</td><td>Локальный путь к приватному ключу, который должен читать процесс MCP-шлюза.</td><td><code>~/.ssh/id_ed25519</code></td><td>Путь хранится в TOML. Файл должен существовать на машине, где запускается шлюз.</td></tr>
+<tr><td><code>SSH ключ</code></td><td>Когда сервер использует key auth</td><td>Загрузите приватный ключ из браузера. Dashboard сохранит файл в своём managed storage и запишет итоговый путь в TOML.</td><td><code>id_ed25519</code></td><td>Это поток как в <code>nifi-universal</code>: выбирается локальный файл, а не server-side path picker.</td></tr>
 <tr><td><code>Passphrase</code></td><td>Когда приватный ключ зашифрован</td><td>Парольную фразу для ключа из поля <code>Путь к ключу</code>.</td><td><code>correct horse battery staple</code></td><td>Если ключ без passphrase, поле оставляют пустым.</td></tr>
 <tr><td><code>Рабочая директория</code></td><td>Когда команды должны стартовать из конкретного каталога</td><td>Базовый каталог для удалённых команд и файловых операций.</td><td><code>/opt/nifi</code>, <code>/var/www/app</code></td><td>Удобно для проектов, где большинство команд выполняется из одного места.</td></tr>
 <tr><td><code>ProxyJump</code></td><td>Когда доступ к целевому хосту идёт через bastion/jump host</td><td>SSH jump host в формате OpenSSH.</td><td><code>bastion</code>, <code>user@bastion:2222</code></td><td>Полезно для закрытых сетей. Значение должно совпадать с тем, как вы бы указали его в обычном <code>ssh -J</code>.</td></tr>
@@ -163,7 +173,7 @@ const DOC_FIELDS_EN = `
 <tr><td><code>Port</code></td><td>When SSH is not on <code>22</code></td><td>The SSH TCP port.</td><td><code>2204</code></td><td>Defaults to the form value if left empty.</td></tr>
 <tr><td><code>Login</code> <span class="req">*</span></td><td>Always</td><td>The SSH username used for remote sessions and commands.</td><td><code>seleznev</code></td><td>This is the SSH user, not a database user.</td></tr>
 <tr><td><code>Password</code></td><td>When password auth is used</td><td>The SSH password for the user.</td><td><code>secret123</code></td><td>Leave empty for key auth or SSH agent auth.</td></tr>
-<tr><td><code>Key Path</code></td><td>When key auth is used</td><td>The local path to the private key readable by the gateway process.</td><td><code>~/.ssh/id_ed25519</code></td><td>The file must exist on the machine running the dashboard.</td></tr>
+<tr><td><code>SSH Key</code></td><td>When key auth is used</td><td>Upload the private key from the browser. The dashboard stores it in managed storage and writes the resulting path to TOML.</td><td><code>id_ed25519</code></td><td>This matches the <code>nifi-universal</code> flow: browser file selection instead of a server-side key-path picker.</td></tr>
 <tr><td><code>Passphrase</code></td><td>When the private key is encrypted</td><td>The passphrase for the key from <code>Key Path</code>.</td><td><code>correct horse battery staple</code></td><td>Keep empty if the key has no passphrase.</td></tr>
 <tr><td><code>Working Directory</code></td><td>When commands should start in a specific folder</td><td>Base directory for remote commands and file operations.</td><td><code>/opt/nifi</code></td><td>Useful when most commands run from one project path.</td></tr>
 <tr><td><code>ProxyJump</code></td><td>When the target host is reached through a bastion</td><td>An OpenSSH-style jump host value.</td><td><code>bastion</code>, <code>user@bastion:2222</code></td><td>Matches the semantics of <code>ssh -J</code>.</td></tr>
@@ -173,77 +183,187 @@ const DOC_FIELDS_EN = `
 </table>`;
 
 export const DOCS_HTML = {
-  ru: `<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${APP_TITLE.ru} — Документация</title><style>${DOC_STYLE}</style></head><body>
+  ru: `<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${PROJECT_NAME} — Документация</title><style>${DOC_STYLE}</style></head><body>
 <a class="back" href="/dashboard?lang=ru">&larr; Dashboard</a>
-<h1>${APP_TITLE.ru}</h1>
-<div class="sub">Dashboard для управления SSH-подключениями</div>
-<h2>Обзор</h2>
-<p>${_T.ru.docs_intro}</p>
-<h2>Что умеет</h2>
+<h1>${PROJECT_NAME}</h1>
+<div class="sub">${_T.ru.subtitle} &middot; <a href="${REPO_URL}" target="_blank" rel="noreferrer">GitHub</a> &middot; <a href="${LICENSE_URL}" target="_blank" rel="noreferrer">MIT License</a></div>
+
+<h2>Оглавление</h2>
 <ul>
-<li>Показывает все серверы из <code>SSH_CONFIG_PATH</code></li>
-<li>Добавляет, редактирует и удаляет записи в TOML</li>
-<li>Проверяет SSH-подключение перед сохранением</li>
-<li>Не отдаёт пароли в HTML и API-списке</li>
-<li>Даёт server-side file picker для <code>Путь к ключу</code> и <code>Рабочая директория</code></li>
+<li><a href="#overview">1. Обзор</a></li>
+<li><a href="#runtime">2. Режим работы</a></li>
+<li><a href="#dashboard">3. Dashboard</a></li>
+<li><a href="#fields">4. Поля подключения</a></li>
+<li><a href="#picker">5. Загрузка ключа и picker</a></li>
+<li><a href="#env">6. Переменные окружения</a></li>
+<li><a href="#api">7. API endpoints</a></li>
+<li><a href="#diagnostics">8. Диагностика</a></li>
 </ul>
-<h2>Использование</h2>
-<p>Откройте <code>/dashboard</code>, заполните форму справа и нажмите «Сохранить и проверить». В списке слева можно повторно проверить, изменить или удалить сервер.</p>
-<p><span class="req">*</span> обязательные поля: <code>Имя соединения</code>, <code>Сервер</code>, <code>Логин</code>. Для аутентификации обычно достаточно либо пары <code>Логин + Пароль</code>, либо <code>Логин + Путь к ключу</code>.</p>
-<p>Рекомендуемый способ запуска: standalone launcher <code>npm run dashboard:start</code> или бинарник <code>ssh-manager-dashboard</code>. Встроенный режим внутри stdio MCP-процесса включается только через <code>SSH_DASHBOARD_EMBEDDED=true</code>.</p>
-<h2>${_T.ru.docs_fields}</h2>
+
+<h2 id="overview">1. Обзор</h2>
+<p>${_T.ru.docs_intro}</p>
+<ul>
+<li>Хранит список SSH-серверов в TOML-конфиге, который использует MCP gateway</li>
+<li>Даёт add/edit/delete/test без ручного редактирования конфигурации</li>
+<li>Скрывает секреты в HTML и API-выводе, отдавая только признаки наличия секретов</li>
+<li>Поддерживает password auth, key auth, SSH agent, ProxyJump, рабочую директорию и sudo-password</li>
+<li>Даёт RU/EN dashboard и RU/EN docs по тому же URL-space</li>
+</ul>
+
+<h2 id="runtime">2. Режим работы</h2>
+<p>Основной сценарий — standalone dashboard через <code>npm run dashboard:start</code> или бинарник <code>ssh-manager-dashboard</code>. Это отдельный HTTP-процесс, который использует тот же service-layer, что и embedded-mode.</p>
+<p>Embedded режим остаётся opt-in и включается только через <code>SSH_DASHBOARD_EMBEDDED=true</code> внутри stdio MCP процесса.</p>
+
+<h2 id="dashboard">3. Dashboard</h2>
+<p>Верхняя панель повторяет контракт <code>postgres-mcp-universal</code>: переключатель языка, кнопка документации и кнопка обновления. Основная область разделена на две колонки:</p>
+<ul>
+<li>слева список серверов со статусами проверки, auth type и platform badges</li>
+<li>справа форма нового подключения</li>
+</ul>
+<p>В карточке сервера доступны действия <code>Проверить</code>, <code>Изменить</code> и <code>Удалить</code>. В форме нового подключения и в edit modal поток теперь такой же, как в <code>nifi-universal</code>: сначала можно проверить черновик без записи, затем отдельно сохранить подключение в TOML.</p>
+
+<h2 id="fields">4. Поля подключения</h2>
 ${DOC_FIELDS_RU}
-<h2>Переменные окружения</h2>
+
+<h2 id="picker">5. Загрузка ключа и picker</h2>
+<p>SSH ключ теперь выбирается как в <code>nifi-universal</code>: через нативный браузерный <code>file input</code>. Dashboard сохраняет загруженный приватный ключ в свой managed storage на хосте gateway и записывает итоговый путь в TOML.</p>
+<ul>
+<li>upload используется для приватного ключа</li>
+<li>для поля <code>Рабочая директория</code> кнопка <code>Обзор...</code> открывает нативный системный dialog на хосте dashboard</li>
+<li>навигация ограничена <code>SSH_DASHBOARD_ALLOWED_ROOTS</code></li>
+<li>при пустом пути dialog стартует с первого разрешённого root</li>
+<li>по умолчанию загруженные ключи сохраняются в <code>~/.ssh-manager/dashboard-keys/&lt;server-name&gt;/</code></li>
+</ul>
+
+<h2 id="env">6. Переменные окружения</h2>
 <ul>
 <li><code>SSH_DASHBOARD_HOST</code> — host для HTTP сервера, по умолчанию <code>127.0.0.1</code></li>
 <li><code>SSH_DASHBOARD_PORT</code> — порт dashboard, по умолчанию <code>8791</code></li>
-<li><code>SSH_DASHBOARD_API_KEY</code> — Bearer token для API; обязателен, если dashboard слушает не loopback-host</li>
-<li><code>SSH_DASHBOARD_ALLOWED_ROOTS</code> — список разрешённых корней для file picker через системный разделитель путей</li>
-<li><code>SSH_DASHBOARD_EMBEDDED</code> — включить встроенный dashboard внутри MCP-процесса; по умолчанию standalone режим предпочтительнее</li>
+<li><code>SSH_DASHBOARD_API_KEY</code> — Bearer token для API; обязателен при bind на non-loopback host</li>
+<li><code>SSH_DASHBOARD_ALLOWED_ROOTS</code> — список разрешённых корней для server-side picker рабочей директории через системный разделитель путей</li>
+<li><code>SSH_DASHBOARD_EMBEDDED</code> — включить dashboard внутри stdio MCP-процесса</li>
+<li><code>SSH_CONFIG_PATH</code> — путь к TOML-файлу с секцией <code>[ssh_servers.*]</code></li>
 </ul>
-<h2>Диагностика</h2>
+
+<h2 id="api">7. API endpoints</h2>
+<table>
+<thead><tr><th>Endpoint</th><th>Метод</th><th>Назначение</th></tr></thead>
+<tbody>
+<tr><td><code>/dashboard</code></td><td><code>GET</code></td><td>HTML dashboard</td></tr>
+<tr><td><code>/dashboard/docs</code></td><td><code>GET</code></td><td>Документация RU/EN</td></tr>
+<tr><td><code>/api/servers</code></td><td><code>GET</code></td><td>Безопасный список серверов без секретов</td></tr>
+<tr><td><code>/api/status</code></td><td><code>GET</code></td><td>Сводка по проверкам dashboard</td></tr>
+<tr><td><code>/api/select-directory</code></td><td><code>POST</code></td><td>Нативный системный выбор рабочей директории на хосте dashboard</td></tr>
+<tr><td><code>/api/browse</code></td><td><code>GET</code></td><td>Legacy server-side picker endpoint</td></tr>
+<tr><td><code>/api/connect</code></td><td><code>POST</code></td><td>Создать запись в TOML без неявного теста</td></tr>
+<tr><td><code>/api/edit</code></td><td><code>POST</code></td><td>Сохранить изменения в TOML без неявного теста</td></tr>
+<tr><td><code>/api/test-draft</code></td><td><code>POST</code></td><td>Проверить черновик формы без записи в TOML</td></tr>
+<tr><td><code>/api/delete</code></td><td><code>POST</code></td><td>Удалить запись из TOML</td></tr>
+<tr><td><code>/api/test</code></td><td><code>POST</code></td><td>Повторно протестировать существующий сервер</td></tr>
+</tbody>
+</table>
+
+<h2 id="diagnostics">8. Диагностика</h2>
 <ul>
 <li>Проверьте <code>curl http://127.0.0.1:8791/dashboard</code></li>
 <li>Проверьте <code>curl http://127.0.0.1:8791/dashboard/docs?lang=en</code></li>
-<li>При bind на внешний интерфейс без API key сервер не стартует специально</li>
+<li>Если dashboard слушает внешний интерфейс, без <code>SSH_DASHBOARD_API_KEY</code> он должен намеренно не стартовать</li>
 <li>При сохранении TOML создаётся backup <code>*.bak</code>, итоговый файл сохраняется с правами <code>0600</code></li>
+<li>Ошибки SSH test кешируются в status summary и показываются в карточке сервера</li>
 </ul>
+
+<div class="footer-note"><a href="/dashboard?lang=ru">Dashboard</a> &middot; <a href="${REPO_URL}" target="_blank" rel="noreferrer">GitHub</a> &middot; <a href="${LICENSE_URL}" target="_blank" rel="noreferrer">MIT License</a></div>
 </body></html>`,
-  en: `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${APP_TITLE.en} — Docs</title><style>${DOC_STYLE}</style></head><body>
+  en: `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${PROJECT_NAME} — Docs</title><style>${DOC_STYLE}</style></head><body>
 <a class="back" href="/dashboard?lang=en">&larr; Dashboard</a>
-<h1>${APP_TITLE.en}</h1>
-<div class="sub">Dashboard for managing SSH connections</div>
-<h2>Overview</h2>
-<p>${_T.en.docs_intro}</p>
-<h2>Features</h2>
+<h1>${PROJECT_NAME}</h1>
+<div class="sub">${_T.en.subtitle} &middot; <a href="${REPO_URL}" target="_blank" rel="noreferrer">GitHub</a> &middot; <a href="${LICENSE_URL}" target="_blank" rel="noreferrer">MIT License</a></div>
+
+<h2>Contents</h2>
 <ul>
-<li>Displays all servers from <code>SSH_CONFIG_PATH</code></li>
-<li>Adds, edits, and deletes TOML entries</li>
-<li>Tests SSH connectivity before saving</li>
-<li>Keeps passwords out of rendered HTML and list APIs</li>
-<li>Provides a server-side file picker for <code>Key Path</code> and <code>Working Directory</code></li>
+<li><a href="#overview">1. Overview</a></li>
+<li><a href="#runtime">2. Runtime Model</a></li>
+<li><a href="#dashboard">3. Dashboard</a></li>
+<li><a href="#fields">4. Connection Fields</a></li>
+<li><a href="#picker">5. Key Upload and Picker</a></li>
+<li><a href="#env">6. Environment Variables</a></li>
+<li><a href="#api">7. API Endpoints</a></li>
+<li><a href="#diagnostics">8. Diagnostics</a></li>
 </ul>
-<h2>Usage</h2>
-<p>Open <code>/dashboard</code>, fill the form on the right, and click “Save and Test”. Use the list on the left to retest, edit, or delete a server.</p>
-<p><span class="req">*</span> required fields: <code>Connection Name</code>, <code>Server</code>, and <code>Login</code>. For authentication you normally need either <code>Login + Password</code> or <code>Login + Key Path</code>.</p>
-<p>The recommended runtime is the standalone launcher via <code>npm run dashboard:start</code> or <code>ssh-manager-dashboard</code>. Embedded mode inside the stdio MCP process is opt-in via <code>SSH_DASHBOARD_EMBEDDED=true</code>.</p>
-<h2>${_T.en.docs_fields}</h2>
+
+<h2 id="overview">1. Overview</h2>
+<p>${_T.en.docs_intro}</p>
+<ul>
+<li>Stores SSH server inventory in the TOML config used by the MCP gateway</li>
+<li>Provides add/edit/delete/test flows without manual config editing</li>
+<li>Keeps secrets out of rendered HTML and API list responses</li>
+<li>Supports password auth, key auth, SSH agent, ProxyJump, working directory, and sudo password</li>
+<li>Ships both RU and EN variants for dashboard and docs</li>
+</ul>
+
+<h2 id="runtime">2. Runtime Model</h2>
+<p>The recommended path is the standalone dashboard via <code>npm run dashboard:start</code> or <code>ssh-manager-dashboard</code>. It runs as a dedicated HTTP process while reusing the same dashboard service layer as the MCP runtime.</p>
+<p>Embedded mode stays opt-in and is enabled only when <code>SSH_DASHBOARD_EMBEDDED=true</code>.</p>
+
+<h2 id="dashboard">3. Dashboard</h2>
+<p>The top bar matches the <code>postgres-mcp-universal</code> dashboard contract: language switcher, documentation button, and refresh action. The main view is split into two columns:</p>
+<ul>
+<li>left: saved server cards with verification status, auth type, and platform badges</li>
+<li>right: new connection form</li>
+</ul>
+<p>Each saved server exposes <code>Test</code>, <code>Edit</code>, and <code>Delete</code>. The new-connection form and edit modal now mirror <code>nifi-universal</code>: you can test the draft first without writing TOML, then save the connection separately.</p>
+
+<h2 id="fields">4. Connection Fields</h2>
 ${DOC_FIELDS_EN}
-<h2>Environment variables</h2>
+
+<h2 id="picker">5. Key Upload and Picker</h2>
+<p>The SSH key now follows the same pattern as <code>nifi-universal</code>: a native browser <code>file input</code>. The dashboard stores the uploaded private key in managed storage on the gateway host and writes the resulting path to TOML.</p>
+<ul>
+<li>browser upload is used for the private key</li>
+<li>the <code>Browse...</code> button for <code>Working Directory</code> opens a native OS dialog on the dashboard host</li>
+<li>navigation is restricted by <code>SSH_DASHBOARD_ALLOWED_ROOTS</code></li>
+<li>when the field is empty, the dialog starts at the first allowed root</li>
+<li>uploaded keys are stored under <code>~/.ssh-manager/dashboard-keys/&lt;server-name&gt;/</code> by default</li>
+</ul>
+
+<h2 id="env">6. Environment Variables</h2>
 <ul>
 <li><code>SSH_DASHBOARD_HOST</code> — HTTP host, default <code>127.0.0.1</code></li>
 <li><code>SSH_DASHBOARD_PORT</code> — dashboard port, default <code>8791</code></li>
-<li><code>SSH_DASHBOARD_API_KEY</code> — Bearer token for API access; required when binding to a non-loopback host</li>
-<li><code>SSH_DASHBOARD_ALLOWED_ROOTS</code> — allowed roots for the file picker, split by the OS path delimiter</li>
-<li><code>SSH_DASHBOARD_EMBEDDED</code> — enable dashboard inside the stdio MCP process; standalone mode is preferred</li>
+<li><code>SSH_DASHBOARD_API_KEY</code> — Bearer token for API access; required on non-loopback hosts</li>
+<li><code>SSH_DASHBOARD_ALLOWED_ROOTS</code> — allowed roots for the working-directory picker, split by OS path delimiter</li>
+<li><code>SSH_DASHBOARD_EMBEDDED</code> — enables dashboard inside the stdio MCP process</li>
+<li><code>SSH_CONFIG_PATH</code> — TOML file path containing <code>[ssh_servers.*]</code></li>
 </ul>
-<h2>Diagnostics</h2>
+
+<h2 id="api">7. API Endpoints</h2>
+<table>
+<thead><tr><th>Endpoint</th><th>Method</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td><code>/dashboard</code></td><td><code>GET</code></td><td>HTML dashboard</td></tr>
+<tr><td><code>/dashboard/docs</code></td><td><code>GET</code></td><td>RU/EN documentation page</td></tr>
+<tr><td><code>/api/servers</code></td><td><code>GET</code></td><td>Safe server inventory without raw secrets</td></tr>
+<tr><td><code>/api/status</code></td><td><code>GET</code></td><td>Dashboard verification summary</td></tr>
+<tr><td><code>/api/select-directory</code></td><td><code>POST</code></td><td>Native OS chooser for the working directory on the dashboard host</td></tr>
+<tr><td><code>/api/browse</code></td><td><code>GET</code></td><td>Legacy server-side picker endpoint</td></tr>
+<tr><td><code>/api/connect</code></td><td><code>POST</code></td><td>Create a TOML entry without an implicit test</td></tr>
+<tr><td><code>/api/edit</code></td><td><code>POST</code></td><td>Save TOML changes without an implicit test</td></tr>
+<tr><td><code>/api/test-draft</code></td><td><code>POST</code></td><td>Test the unsaved form payload without writing TOML</td></tr>
+<tr><td><code>/api/delete</code></td><td><code>POST</code></td><td>Delete a TOML entry</td></tr>
+<tr><td><code>/api/test</code></td><td><code>POST</code></td><td>Re-test an existing server</td></tr>
+</tbody>
+</table>
+
+<h2 id="diagnostics">8. Diagnostics</h2>
 <ul>
 <li>Check <code>curl http://127.0.0.1:8791/dashboard</code></li>
 <li>Check <code>curl http://127.0.0.1:8791/dashboard/docs?lang=en</code></li>
-<li>The server intentionally refuses to start on a non-loopback host without an API key</li>
+<li>The server intentionally refuses to start on a non-loopback host without <code>SSH_DASHBOARD_API_KEY</code></li>
 <li>Saving TOML creates a <code>*.bak</code> backup and writes the final file with <code>0600</code> permissions</li>
+<li>SSH test failures are cached and shown in server cards/status summary</li>
 </ul>
+
+<div class="footer-note"><a href="/dashboard?lang=en">Dashboard</a> &middot; <a href="${REPO_URL}" target="_blank" rel="noreferrer">GitHub</a> &middot; <a href="${LICENSE_URL}" target="_blank" rel="noreferrer">MIT License</a></div>
 </body></html>`
 };
 
@@ -265,7 +385,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .btn:hover{background:#334155;color:#f8fafc}.btn-p{background:#0369a1;border-color:#0369a1;color:#fff}.btn-p:hover{background:#0284c7}.btn-d{color:#ef4444;border-color:rgba(239,68,68,.25)}.btn-d:hover{background:rgba(239,68,68,.1);color:#ef4444;border-color:#ef4444}
 .card{background:#1e293b;border-radius:8px;padding:12px;border:1px solid #334155;overflow:hidden;margin-bottom:14px}
 .card h2{font-size:.65rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;font-weight:600}
-.cols{display:grid;grid-template-columns:1.05fr .95fr;gap:14px;align-items:start}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
 .server-item{background:#0f172a;border:1px solid #334155;border-radius:6px;padding:10px 12px;margin-bottom:8px;transition:border-color .15s}.server-item:hover{border-color:#475569}.server-item:last-child{margin-bottom:0}
 .server-row{display:flex;align-items:flex-start;gap:10px}.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:6px}.dot.ok{background:#22c55e}.dot.err{background:#ef4444}.dot.unknown{background:#64748b}
 .server-info{flex:1;min-width:0}.server-name{font-weight:600;font-size:.88rem}.server-details{color:#94a3b8;font-size:.75rem;font-family:'SF Mono','Cascadia Code',monospace;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -274,9 +394,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .badge{display:inline-flex;align-items:center;padding:1px 6px;border-radius:3px;font-size:.62rem;font-weight:600}.badge-g{background:rgba(34,197,94,.12);color:#22c55e}.badge-r{background:rgba(239,68,68,.12);color:#ef4444}.badge-b{background:rgba(59,130,246,.12);color:#3b82f6}.badge-c{background:#164e63;color:#22d3ee}.badge-y{background:rgba(234,179,8,.15);color:#facc15}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.form-group{display:flex;flex-direction:column;gap:3px}.form-group.full{grid-column:1/-1}
 .form-group label{font-size:.65rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+input[type="file"]{padding:4px 8px;font-size:.75rem}
+input[type="file"]::file-selector-button{padding:3px 10px;border-radius:4px;border:1px solid #475569;background:#1e293b;color:#94a3b8;font-size:.75rem;cursor:pointer;margin-right:8px;transition:.15s}
+input[type="file"]::file-selector-button:hover{background:#334155;color:#f8fafc}
 input,select{padding:5px 8px;border-radius:4px;border:1px solid #475569;background:#0f172a;color:#e2e8f0;font-size:.8rem;transition:border .15s;width:100%}
 input:focus,select:focus{outline:none;border-color:#38bdf8}.btn:focus-visible,.lang-sw a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #38bdf8;outline-offset:2px}
 .path-picker{display:flex;gap:6px;align-items:stretch}.path-picker input{flex:1}.path-picker .btn{white-space:nowrap;padding:5px 10px}.path-picker .btn-clear{padding:5px 8px;min-width:38px}
+.upload-note{font-size:.7rem;color:#64748b;line-height:1.4}
 .form-actions{display:flex;gap:6px;justify-content:flex-end;margin-top:10px}
 .empty{text-align:center;padding:20px;color:#64748b;font-size:.82rem}
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:flex;align-items:center;justify-content:center}
@@ -312,14 +436,14 @@ input:focus,select:focus{outline:none;border-color:#38bdf8}.btn:focus-visible,.l
         <div class="form-group"><label>{{port}}</label><input id="f-port" value="22"></div>
         <div class="form-group"><label>{{login}} *</label><input id="f-user"></div>
         <div class="form-group"><label>{{password}}</label><input id="f-pass" type="password"></div>
-        <div class="form-group"><label>{{key_path}}</label><div class="path-picker"><input id="f-key-path" placeholder="~/.ssh/id_ed25519"><button class="btn" type="button" onclick="openPathPicker('f-key-path', 'file')">{{btn_browse}}</button><button class="btn btn-clear" type="button" onclick="clearPathField('f-key-path')" title="{{btn_clear}}">×</button></div></div>
+        <div class="form-group"><label>{{key_path}}</label><input id="f-key-path" type="hidden"><input id="f-key-file" type="file"><div class="upload-note">{{key_upload_hint}}</div></div>
         <div class="form-group"><label>{{passphrase}}</label><input id="f-passphrase" type="password"></div>
-        <div class="form-group"><label>{{default_dir}}</label><div class="path-picker"><input id="f-default-dir" placeholder="/var/www/app"><button class="btn" type="button" onclick="openPathPicker('f-default-dir', 'dir')">{{btn_browse}}</button><button class="btn btn-clear" type="button" onclick="clearPathField('f-default-dir')" title="{{btn_clear}}">×</button></div></div>
+        <div class="form-group"><label>{{default_dir}}</label><div class="path-picker"><input id="f-default-dir" placeholder="/var/www/app"><button class="btn" type="button" onclick="openSystemDirectoryDialog('f-default-dir')">{{btn_browse}}</button><button class="btn btn-clear" type="button" onclick="clearPathField('f-default-dir')" title="{{btn_clear}}">×</button></div></div>
         <div class="form-group"><label>{{proxy_jump}}</label><input id="f-proxy-jump"></div>
         <div class="form-group"><label>{{platform}}</label><select id="f-platform"><option value=""></option><option value="linux">Linux</option><option value="windows">Windows</option><option value="macos">macOS</option></select></div>
         <div class="form-group"><label>{{sudo_password}}</label><input id="f-sudo-password" type="password"></div>
       </div>
-      <div class="form-actions"><button class="btn btn-p" onclick="connectServer()">{{btn_connect}}</button></div>
+      <div class="form-actions"><button class="btn" onclick="testDraftServer()">{{btn_test}}</button><button class="btn" onclick="connectServer()">→ {{btn_connect}}</button></div>
     </div>
   </div>
 </div>
@@ -364,7 +488,30 @@ async function api(url, opts, retryAuth) {
 function escHtml(s) { const d = document.createElement('div'); d.appendChild(document.createTextNode(s || '')); return d.innerHTML; }
 function escAttr(s) { return escHtml(s).replace(/'/g, '&#39;').replace(/"/g, '&quot;'); }
 function clearPathField(id) { document.getElementById(id).value = ''; }
-function serverPayload(prefix) {
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === 'string' ? reader.result : '';
+      const marker = result.indexOf(',');
+      resolve(marker >= 0 ? result.slice(marker + 1) : result);
+    };
+    reader.onerror = () => reject(reader.error || new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
+}
+async function readUploadedKeyFile(prefix) {
+  const input = document.getElementById(prefix + '-key-file');
+  if (!input || !input.files || input.files.length === 0) {
+    return null;
+  }
+  const file = input.files[0];
+  return {
+    name: file.name || 'id_uploaded',
+    contentBase64: await readFileAsBase64(file)
+  };
+}
+async function serverPayload(prefix) {
   return {
     name: document.getElementById(prefix + '-name').value.trim(),
     description: document.getElementById(prefix + '-description').value.trim(),
@@ -373,6 +520,7 @@ function serverPayload(prefix) {
     user: document.getElementById(prefix + '-user').value.trim(),
     password: document.getElementById(prefix + '-pass').value,
     keyPath: document.getElementById(prefix + '-key-path').value.trim(),
+    uploadedKeyFile: await readUploadedKeyFile(prefix),
     passphrase: document.getElementById(prefix + '-passphrase').value,
     defaultDir: document.getElementById(prefix + '-default-dir').value.trim(),
     proxyJump: document.getElementById(prefix + '-proxy-jump').value.trim(),
@@ -436,28 +584,23 @@ async function loadServers() {
   }).join('');
 }
 async function connectServer() {
-  const payload = {
-    name: document.getElementById('f-name').value.trim(),
-    description: document.getElementById('f-description').value.trim(),
-    host: document.getElementById('f-host').value.trim(),
-    port: document.getElementById('f-port').value.trim(),
-    user: document.getElementById('f-user').value.trim(),
-    password: document.getElementById('f-pass').value,
-    keyPath: document.getElementById('f-key-path').value.trim(),
-    passphrase: document.getElementById('f-passphrase').value,
-    defaultDir: document.getElementById('f-default-dir').value.trim(),
-    proxyJump: document.getElementById('f-proxy-jump').value.trim(),
-    platform: document.getElementById('f-platform').value,
-    sudoPassword: document.getElementById('f-sudo-password').value
-  };
+  const payload = await serverPayload('f');
   if (!payload.name || !payload.host || !payload.user) { toast(T.fill_fields, true); return; }
   const r = await api('/api/connect', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
   if (!r || r.error) { toast(T.msg_error + ': ' + (r && r.error ? r.error : 'unknown'), true); return; }
   toast(T.msg_connected + ': ' + payload.name);
   ['name','description','host','user','pass','key-path','passphrase','default-dir','proxy-jump','sudo-password'].forEach((id) => document.getElementById('f-' + id).value = '');
+  document.getElementById('f-key-file').value = '';
   document.getElementById('f-port').value = '22';
   document.getElementById('f-platform').value = '';
   loadServers();
+}
+async function testDraftServer() {
+  const payload = await serverPayload('f');
+  if (!payload.name || !payload.host || !payload.user) { toast(T.fill_fields, true); return; }
+  const r = await api('/api/test-draft', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+  if (!r || r.error) { toast(T.msg_error + ': ' + (r && r.error ? r.error : 'unknown'), true); return; }
+  toast(T.msg_test_ok + ': ' + payload.name);
 }
 async function testServer(name) {
   const r = await api('/api/test', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name }) });
@@ -469,6 +612,30 @@ async function browsePath(mode, currentPath) {
   const params = new URLSearchParams({ mode });
   if (currentPath) params.set('path', currentPath);
   return api('/api/browse?' + params.toString());
+}
+async function selectDirectoryWithOsDialog(currentPath) {
+  return api('/api/select-directory', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ currentPath: currentPath || '' })
+  });
+}
+async function openSystemDirectoryDialog(targetId) {
+  const input = document.getElementById(targetId);
+  const currentPath = input ? input.value.trim() : '';
+  const result = await selectDirectoryWithOsDialog(currentPath);
+  if (!result || result.error) {
+    if (result && result.error) {
+      toast(T.msg_error + ': ' + result.error, true);
+    }
+    return;
+  }
+  if (result.cancelled) {
+    return;
+  }
+  if (input) {
+    input.value = result.path || '';
+  }
 }
 async function openPathPicker(targetId, mode, initialPath) {
   _pickerState = {
@@ -543,20 +710,27 @@ function editServer(encodedPayload) {
       '<div class="form-group"><label>' + T.port + '</label><input id="e-port" value="' + escAttr(String(server.port || 22)) + '"></div>' +
       '<div class="form-group"><label>' + T.login + '</label><input id="e-user" value="' + escAttr(server.user) + '"></div>' +
       '<div class="form-group"><label>' + T.password + '</label><input id="e-pass" type="password" placeholder="' + (server.hasPassword ? '••••••' : '') + '"></div>' +
-      '<div class="form-group"><label>' + T.key_path + '</label><div class="path-picker"><input id="e-key-path" value="' + escAttr(server.keyPath || '') + '"><button class="btn" type="button" onclick="openPathPicker(\'e-key-path\', \'file\')">' + T.btn_browse + '</button><button class="btn btn-clear" type="button" onclick="clearPathField(\'e-key-path\')" title="' + escAttr(T.btn_clear) + '">×</button></div></div>' +
+      '<div class="form-group"><label>' + T.key_path + '</label><input id="e-key-path" type="hidden" value="' + escAttr(server.keyPath || '') + '"><input id="e-key-file" type="file"><div class="upload-note">' + (server.keyPath ? (escHtml(T.key_current) + ': ' + escHtml(server.keyPath) + '<br>' + escHtml(T.key_replace_hint)) : escHtml(T.key_upload_hint)) + '</div></div>' +
       '<div class="form-group"><label>' + T.passphrase + '</label><input id="e-passphrase" type="password" placeholder="' + (server.hasPassphrase ? '••••••' : '') + '"></div>' +
-      '<div class="form-group"><label>' + T.default_dir + '</label><div class="path-picker"><input id="e-default-dir" value="' + escAttr(server.defaultDir || '') + '"><button class="btn" type="button" onclick="openPathPicker(\'e-default-dir\', \'dir\')">' + T.btn_browse + '</button><button class="btn btn-clear" type="button" onclick="clearPathField(\'e-default-dir\')" title="' + escAttr(T.btn_clear) + '">×</button></div></div>' +
+      '<div class="form-group"><label>' + T.default_dir + '</label><div class="path-picker"><input id="e-default-dir" value="' + escAttr(server.defaultDir || '') + '"><button class="btn" type="button" onclick="openSystemDirectoryDialog(\'e-default-dir\')">' + T.btn_browse + '</button><button class="btn btn-clear" type="button" onclick="clearPathField(\'e-default-dir\')" title="' + escAttr(T.btn_clear) + '">×</button></div></div>' +
       '<div class="form-group"><label>' + T.proxy_jump + '</label><input id="e-proxy-jump" value="' + escAttr(server.proxyJump || '') + '"></div>' +
       '<div class="form-group"><label>' + T.platform + '</label><select id="e-platform"><option value=""></option><option value="linux"' + (server.platform === 'linux' ? ' selected' : '') + '>Linux</option><option value="windows"' + (server.platform === 'windows' ? ' selected' : '') + '>Windows</option><option value="macos"' + (server.platform === 'macos' ? ' selected' : '') + '>macOS</option></select></div>' +
       '<div class="form-group"><label>' + T.sudo_password + '</label><input id="e-sudo-password" type="password" placeholder="' + (server.hasSudoPassword ? '••••••' : '') + '"></div>' +
     '</div>' +
-    '<div class="modal-actions"><button class="btn" onclick="this.closest(\'.overlay\').remove()">' + T.btn_cancel + '</button><button class="btn btn-p" onclick="saveEdit(\'' + escAttr(server.name) + '\')">' + T.btn_save + '</button></div>' +
+    '<div class="modal-actions"><button class="btn" onclick="this.closest(\'.overlay\').remove()">' + T.btn_cancel + '</button><button class="btn" onclick="testEditDraft()">' + T.btn_test + '</button><button class="btn btn-p" onclick="saveEdit(\'' + escAttr(server.name) + '\')">' + T.btn_save + '</button></div>' +
     '</div>';
   document.body.appendChild(ov);
   ov.addEventListener('click', (e) => { if (e.target === ov) ov.remove(); });
 }
+async function testEditDraft() {
+  const payload = await serverPayload('e');
+  if (!payload.name || !payload.host || !payload.user) { toast(T.fill_fields, true); return; }
+  const r = await api('/api/test-draft', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+  if (!r || r.error) { toast(T.msg_error + ': ' + (r && r.error ? r.error : 'unknown'), true); return; }
+  toast(T.msg_test_ok + ': ' + payload.name);
+}
 async function saveEdit(oldName) {
-  const payload = serverPayload('e');
+  const payload = await serverPayload('e');
   payload.old_name = oldName;
   if (!payload.name || !payload.host || !payload.user) { toast(T.fill_fields, true); return; }
   const r = await api('/api/edit', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
@@ -581,6 +755,6 @@ async function doDelete(name) {
 }
 loadServers();
 </script>
-<div class="footer">{{app_title}} — <a href="https://github.com/AlekseiSeleznev/ssh-mcp-universal">GitHub</a> — MIT License</div>
+<div class="footer">${PROJECT_NAME} — <a href="${REPO_URL}" target="_blank" rel="noreferrer">GitHub</a> — <a href="${LICENSE_URL}" target="_blank" rel="noreferrer">MIT License</a></div>
 </body>
 </html>`;

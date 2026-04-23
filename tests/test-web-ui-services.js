@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
-import { browseLocalPath, connectFromBody, deleteFromBody, editFromBody, expandLocalPath, isPathWithinAllowedRoots, normalizeServerInput, testFromBody, validateServerInput } from '../src/web-ui-services.js';
+import { browseLocalPath, chooseLocalDirectoryWithOsDialog, connectFromBody, deleteFromBody, editFromBody, expandLocalPath, isPathWithinAllowedRoots, normalizeServerInput, testDraftFromBody, testFromBody, validateServerInput } from '../src/web-ui-services.js';
 
 const GREEN = '\x1b[32m';
 const RED = '\x1b[31m';
@@ -63,7 +63,7 @@ await test('connectFromBody rejects duplicate names', async () => {
       password: 'secret'
     }, {
       hasServer: () => true,
-      connectAndSaveServer: async () => ({ ok: true })
+      saveServer: async () => ({ ok: true })
     });
   } catch (error) {
     threw = true;
@@ -83,7 +83,7 @@ await test('connectFromBody validates required auth secret', async () => {
       user: 'deploy'
     }, {
       hasServer: () => false,
-      connectAndSaveServer: async () => ({ ok: true })
+      saveServer: async () => ({ ok: true })
     });
   } catch (error) {
     threw = true;
@@ -103,11 +103,37 @@ await test('connectFromBody returns normalized payload on success', async () => 
     port: '2204'
   }, {
     hasServer: () => false,
-    connectAndSaveServer: async (server) => server
+    saveServer: async (server) => server
   });
 
   assertEqual(result.name, 'prod', 'Should normalize server name before saving');
   assertEqual(result.port, 2204, 'Should normalize port before saving');
+});
+
+await test('connectFromBody persists uploaded key files into managed storage', async () => {
+  const uploadRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'ssh-dashboard-upload-'));
+
+  try {
+    const result = await connectFromBody({
+      name: 'prod',
+      host: 'example.com',
+      user: 'deploy',
+      uploadedKeyFile: {
+        name: 'id_ed25519',
+        contentBase64: Buffer.from('PRIVATE KEY DATA', 'utf8').toString('base64'),
+      }
+    }, {
+      hasServer: () => false,
+      saveServer: async (server) => server,
+      keyUploadDir: uploadRoot,
+    });
+
+    assertEqual(result.keyPath, path.join(uploadRoot, 'prod', 'id_ed25519'), 'Should replace upload with managed key path');
+    const savedContent = await fs.readFile(result.keyPath, 'utf8');
+    assertEqual(savedContent, 'PRIVATE KEY DATA', 'Should persist uploaded key content');
+  } finally {
+    await fs.rm(uploadRoot, { recursive: true, force: true });
+  }
 });
 
 await test('editFromBody preserves old secrets when fields are blank', async () => {
@@ -129,16 +155,58 @@ await test('editFromBody preserves old secrets when fields are blank', async () 
       port: 22,
       password: 'secret',
       sudoPassword: 'sudo-secret',
-      keyPath: '',
+      keyPath: '/keys/id_ed25519',
     }),
-    editAndSaveServer: async (_oldName, merged) => {
+    editSavedServer: async (_oldName, merged) => {
       saved = merged;
       return { ok: true };
     }
   });
 
   assertEqual(saved.password, 'secret', 'Should preserve password');
+  assertEqual(saved.keyPath, '/keys/id_ed25519', 'Should preserve key path');
   assertEqual(saved.sudoPassword, 'sudo-secret', 'Should preserve sudo password');
+});
+
+await test('editFromBody persists a newly uploaded key file', async () => {
+  const uploadRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'ssh-dashboard-edit-upload-'));
+  let saved = null;
+
+  try {
+    await editFromBody({
+      old_name: 'prod',
+      name: 'prod',
+      host: 'example.com',
+      user: 'deploy',
+      port: '22',
+      password: '',
+      keyPath: '',
+      uploadedKeyFile: {
+        name: 'id_rsa',
+        contentBase64: Buffer.from('UPDATED KEY DATA', 'utf8').toString('base64'),
+      }
+    }, {
+      getServer: () => ({
+        name: 'prod',
+        host: 'example.com',
+        user: 'deploy',
+        port: 22,
+        keyPath: '/keys/old',
+        passphrase: 'secret',
+      }),
+      editSavedServer: async (_oldName, merged) => {
+        saved = merged;
+        return { ok: true };
+      },
+      keyUploadDir: uploadRoot,
+    });
+
+    assertEqual(saved.keyPath, path.join(uploadRoot, 'prod', 'id_rsa'), 'Should write uploaded edit key into managed storage');
+    const savedContent = await fs.readFile(saved.keyPath, 'utf8');
+    assertEqual(savedContent, 'UPDATED KEY DATA', 'Should persist the replacement key');
+  } finally {
+    await fs.rm(uploadRoot, { recursive: true, force: true });
+  }
 });
 
 await test('editFromBody requires old_name and existing server', async () => {
@@ -146,7 +214,7 @@ await test('editFromBody requires old_name and existing server', async () => {
   try {
     await editFromBody({}, {
       getServer: () => null,
-      editAndSaveServer: async () => ({ ok: true })
+      editSavedServer: async () => ({ ok: true })
     });
   } catch (error) {
     missingOldName = true;
@@ -157,7 +225,7 @@ await test('editFromBody requires old_name and existing server', async () => {
   try {
     await editFromBody({ old_name: 'missing' }, {
       getServer: () => null,
-      editAndSaveServer: async () => ({ ok: true })
+      editSavedServer: async () => ({ ok: true })
     });
   } catch (error) {
     missingServer = true;
@@ -165,6 +233,25 @@ await test('editFromBody requires old_name and existing server', async () => {
   }
 
   assertTrue(missingOldName && missingServer, 'Should validate old_name and existence');
+});
+
+await test('testDraftFromBody validates and tests without saving', async () => {
+  let seen = null;
+  const result = await testDraftFromBody({
+    name: 'prod',
+    host: 'example.com',
+    user: 'deploy',
+    password: 'secret'
+  }, {
+    draftTestServer: async (server) => {
+      seen = server;
+      return { ok: true, name: server.name, duration_ms: 17 };
+    }
+  });
+
+  assertEqual(result.ok, true, 'Should return draft test result');
+  assertEqual(result.duration_ms, 17, 'Should preserve draft test duration');
+  assertEqual(seen.host, 'example.com', 'Should pass normalized server config into draft test');
 });
 
 await test('deleteFromBody and testFromBody pass through on success', async () => {
@@ -332,6 +419,55 @@ await test('browseLocalPath sorts same-kind entries alphabetically', async () =>
 await test('browseLocalPath returns null parent for filesystem root', async () => {
   const result = await browseLocalPath('/', { mode: 'dir', allowedRoots: ['/'] });
   assertEqual(result.parentPath, null, 'Filesystem root should not expose a parent path');
+});
+
+await test('chooseLocalDirectoryWithOsDialog returns validated native selection', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'ssh-dashboard-native-dir-'));
+  const chosen = path.join(tempRoot, 'project');
+  await fs.mkdir(chosen, { recursive: true });
+
+  try {
+    const result = await chooseLocalDirectoryWithOsDialog('', {
+      allowedRoots: [tempRoot],
+      dialogRunner: async () => ({ cancelled: false, path: chosen }),
+    });
+
+    assertEqual(result.cancelled, false, 'Should return a completed selection');
+    assertEqual(result.path, chosen, 'Should return the selected directory path');
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
+await test('chooseLocalDirectoryWithOsDialog treats dialog cancel as non-error', async () => {
+  const result = await chooseLocalDirectoryWithOsDialog('', {
+    allowedRoots: [os.homedir()],
+    dialogRunner: async () => ({ cancelled: true, path: '' }),
+  });
+
+  assertEqual(result.cancelled, true, 'Should expose cancellation state');
+  assertEqual(result.path, '', 'Should not return a path on cancel');
+});
+
+await test('chooseLocalDirectoryWithOsDialog rejects selections outside allowed roots', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'ssh-dashboard-native-block-'));
+  let threw = false;
+
+  try {
+    await chooseLocalDirectoryWithOsDialog('', {
+      allowedRoots: [tempRoot],
+      dialogRunner: async () => ({ cancelled: false, path: '/tmp' }),
+    });
+  } catch (error) {
+    threw = true;
+    assertEqual(error.message, 'Selected path is outside allowed roots.', 'Should reject directory outside allowed roots');
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+
+  if (!threw) {
+    throw new Error('Expected native directory chooser to reject outside path');
+  }
 });
 
 console.log('\n' + '='.repeat(60));

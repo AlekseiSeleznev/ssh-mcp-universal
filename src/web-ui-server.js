@@ -3,7 +3,7 @@ import { URL } from 'node:url';
 
 import { logger } from './logger.js';
 import { renderDashboard, renderDocs, jsonResponse, errorResponse, safeServerForDashboard, dashboardStatusSummary } from './web-ui-helpers.js';
-import { connectFromBody, editFromBody, deleteFromBody, testFromBody, browseLocalPath } from './web-ui-services.js';
+import { connectFromBody, editFromBody, deleteFromBody, testFromBody, testDraftFromBody, browseLocalPath, chooseLocalDirectoryWithOsDialog } from './web-ui-services.js';
 
 const CSP_HEADER = [
   "default-src 'self'",
@@ -47,14 +47,23 @@ export function startDashboardServer(options) {
     port = 8791,
     apiKey = '',
     allowedBrowseRoots = [process.env.HOME].filter(Boolean),
+    keyUploadDir = '',
     getServerList,
     getServer,
     connectAndSaveServer,
     editAndSaveServer,
+    saveServer,
+    editSavedServer,
+    draftTestServer,
+    selectDirectoryDialog,
     deleteServer,
     testServer,
     getTestResults,
   } = options;
+
+  const resolvedSaveServer = saveServer || connectAndSaveServer;
+  const resolvedEditSavedServer = editSavedServer || editAndSaveServer;
+  const resolvedSelectDirectoryDialog = selectDirectoryDialog || ((currentPath) => chooseLocalDirectoryWithOsDialog(currentPath, { allowedRoots: allowedBrowseRoots }));
 
   const loopbackHosts = new Set(['127.0.0.1', '::1', 'localhost']);
   if (!apiKey && !loopbackHosts.has(host)) {
@@ -124,18 +133,31 @@ export function startDashboardServer(options) {
         return jsonResponse(res, result);
       }
 
+      if (req.method === 'POST' && url.pathname === '/api/select-directory') {
+        const body = await readJsonBody(req);
+        const result = await resolvedSelectDirectoryDialog(body.currentPath || '');
+        return jsonResponse(res, result);
+      }
+
       if (req.method === 'POST' && url.pathname === '/api/connect') {
         const body = await readJsonBody(req);
         const result = await connectFromBody(body, {
           hasServer: (name) => Boolean(getServer(name)),
-          connectAndSaveServer,
+          saveServer: resolvedSaveServer,
+          keyUploadDir,
         });
         return jsonResponse(res, result);
       }
 
       if (req.method === 'POST' && url.pathname === '/api/edit') {
         const body = await readJsonBody(req);
-        const result = await editFromBody(body, { getServer, editAndSaveServer });
+        const result = await editFromBody(body, { getServer, editSavedServer: resolvedEditSavedServer, keyUploadDir });
+        return jsonResponse(res, result);
+      }
+
+      if (req.method === 'POST' && url.pathname === '/api/test-draft') {
+        const body = await readJsonBody(req);
+        const result = await testDraftFromBody(body, { draftTestServer, keyUploadDir });
         return jsonResponse(res, result);
       }
 

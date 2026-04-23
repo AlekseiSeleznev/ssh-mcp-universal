@@ -81,6 +81,30 @@ await test('connectAndSaveServer saves config and records ok test state', async 
   assertEqual(service.getTestResults().get('prod').status, 'ok', 'Should mark test as ok');
 });
 
+await test('saveServer persists config without running an implicit test', async () => {
+  const loader = createLoader();
+  let testCalls = 0;
+  const service = createDashboardService({
+    configLoader: loader,
+    testConnectionImpl: async () => {
+      testCalls += 1;
+      return { ok: true };
+    }
+  });
+
+  const result = await service.saveServer({
+    name: 'prod',
+    host: 'example.com',
+    user: 'deploy',
+    password: 'secret'
+  });
+
+  assertEqual(result.ok, true, 'Should save successfully');
+  assertEqual(loader.saveToTomlCalls, 1, 'Should persist TOML once');
+  assertEqual(testCalls, 0, 'Should not run an implicit connectivity test');
+  assertEqual(service.getTestResults().get('prod').status, 'unknown', 'Should reset dashboard state to untested');
+});
+
 await test('connectAndSaveServer rejects duplicate names before testing', async () => {
   const loader = createLoader();
   loader.setServer('prod', { host: 'example.com', user: 'deploy', password: 'secret' });
@@ -145,6 +169,31 @@ await test('testServerConnection falls back to elapsed duration when implementat
   assertEqual(result.name, 'prod', 'Should normalize the server name');
   assertTrue(Number.isInteger(result.duration_ms), 'Should synthesize elapsed duration');
   assertEqual(service.getTestResults().get('prod').status, 'ok', 'Should cache ok test status');
+});
+
+await test('draftTestServer tests temporary config without persisting it', async () => {
+  const loader = createLoader();
+  let seenHost = '';
+  const service = createDashboardService({
+    configLoader: loader,
+    testConnectionImpl: async (name) => {
+      seenHost = loader.getServer(name).host;
+      return { ok: true, duration_ms: 9 };
+    }
+  });
+
+  const result = await service.draftTestServer({
+    name: 'prod',
+    host: 'draft.example.com',
+    user: 'deploy',
+    password: 'secret'
+  });
+
+  assertEqual(result.ok, true, 'Should report successful draft test');
+  assertEqual(result.name, 'prod', 'Should report the user-visible server name');
+  assertEqual(result.duration_ms, 9, 'Should return connectivity timing');
+  assertEqual(seenHost, 'draft.example.com', 'Should test against the draft config');
+  assertEqual(loader.hasServer('prod'), false, 'Should not persist the draft server');
 });
 
 await test('setDashboardTestResult writes explicit cached state', async () => {
@@ -216,6 +265,32 @@ await test('editAndSaveServer restores snapshot on failed test', async () => {
   assertTrue(threw, 'Should throw on failed edit');
   assertEqual(loader.getServer('prod').host, 'old.example.com', 'Should restore previous server config');
   assertEqual(restored, true, 'Should invoke afterRestore hook');
+});
+
+await test('editSavedServer persists changes without implicit test and marks state unknown', async () => {
+  const loader = createLoader();
+  loader.setServer('prod', { host: 'old.example.com', user: 'deploy', password: 'secret' });
+  let testCalls = 0;
+  const service = createDashboardService({
+    configLoader: loader,
+    testConnectionImpl: async () => {
+      testCalls += 1;
+      return { ok: true };
+    }
+  });
+
+  service.getTestResults().set('prod', { status: 'ok' });
+  const result = await service.editSavedServer('prod', {
+    name: 'prod',
+    host: 'new.example.com',
+    user: 'deploy',
+    password: 'secret'
+  });
+
+  assertEqual(result.ok, true, 'Should edit successfully');
+  assertEqual(loader.getServer('prod').host, 'new.example.com', 'Should persist the edited config');
+  assertEqual(testCalls, 0, 'Should not run implicit test during save');
+  assertEqual(service.getTestResults().get('prod').status, 'unknown', 'Should mark edited server as untested');
 });
 
 await test('deleteSavedServer removes config and cached test result', async () => {

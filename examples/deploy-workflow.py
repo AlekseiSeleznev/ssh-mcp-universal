@@ -177,7 +177,7 @@ def main():
     print("4. Always test connection first:")
     print('   "Test connection to production server"')
     print()
-    print("📚 See docs/DEPLOYMENT_GUIDE.md for complete documentation")
+    print("📚 Adjust the workflow variables above for your environment")
 
 if __name__ == "__main__":
     main()

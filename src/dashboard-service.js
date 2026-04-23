@@ -30,6 +30,10 @@ export function createDashboardService(options) {
     });
   }
 
+  function markServerUntested(serverName) {
+    setDashboardTestResult(serverName, 'unknown', null, '');
+  }
+
   async function testServerConnection(serverName) {
     const normalizedName = serverName.toLowerCase();
     const startTime = Date.now();
@@ -70,6 +74,19 @@ export function createDashboardService(options) {
     }
   }
 
+  async function saveServer(serverInput) {
+    const normalizedName = serverInput.name.toLowerCase();
+    if (configLoader.hasServer(normalizedName)) {
+      throw new Error(`Server "${normalizedName}" already exists.`);
+    }
+
+    configLoader.setServer(normalizedName, serverInput, 'toml');
+    afterSave();
+    configLoader.saveToToml();
+    markServerUntested(normalizedName);
+    return { ok: true, name: normalizedName };
+  }
+
   async function editAndSaveServer(oldName, serverInput) {
     const oldNormalized = oldName.toLowerCase();
     const newNormalized = serverInput.name.toLowerCase();
@@ -93,6 +110,49 @@ export function createDashboardService(options) {
     }
   }
 
+  async function editSavedServer(oldName, serverInput) {
+    const oldNormalized = oldName.toLowerCase();
+    const newNormalized = serverInput.name.toLowerCase();
+    const snapshot = snapshotState();
+
+    try {
+      beforeEdit(oldNormalized, newNormalized);
+      configLoader.removeServer(oldNormalized);
+      configLoader.setServer(newNormalized, serverInput, 'toml');
+      afterSave();
+      configLoader.saveToToml();
+      testResults.delete(oldNormalized);
+      markServerUntested(newNormalized);
+      return { ok: true, name: newNormalized };
+    } catch (error) {
+      restoreState(snapshot);
+      afterRestore(snapshot);
+      throw error;
+    }
+  }
+
+  async function draftTestServer(serverInput) {
+    const snapshot = snapshotState();
+    const draftName = `__dashboard_test__${Date.now()}`;
+
+    try {
+      configLoader.setServer(draftName, { ...serverInput, name: draftName }, 'toml');
+      afterSave();
+      const startTime = Date.now();
+      const result = await testConnectionImpl(draftName);
+      const duration = result?.duration_ms ?? (Date.now() - startTime);
+      return {
+        ok: true,
+        ...(result || {}),
+        name: serverInput.name.toLowerCase(),
+        duration_ms: duration
+      };
+    } finally {
+      restoreState(snapshot);
+      afterRestore(snapshot);
+    }
+  }
+
   async function deleteSavedServer(serverName) {
     const normalizedName = serverName.toLowerCase();
     if (!configLoader.hasServer(normalizedName)) {
@@ -112,6 +172,9 @@ export function createDashboardService(options) {
     getTestResults: () => testResults,
     setDashboardTestResult,
     testServerConnection,
+    draftTestServer,
+    saveServer,
+    editSavedServer,
     connectAndSaveServer,
     editAndSaveServer,
     deleteSavedServer

@@ -42,6 +42,10 @@ async function startServer(overrides = {}) {
     port: 0,
     getServerList: () => [],
     getServer: () => null,
+    saveServer: async () => ({ ok: true }),
+    editSavedServer: async () => ({ ok: true }),
+    draftTestServer: async () => ({ ok: true }),
+    selectDirectoryDialog: async () => ({ cancelled: false, path: '/tmp' }),
     connectAndSaveServer: async () => ({ ok: true }),
     editAndSaveServer: async () => ({ ok: true }),
     deleteServer: async () => ({ ok: true }),
@@ -88,6 +92,10 @@ await test('startDashboardServer rejects non-loopback host without API key', asy
       port: 8791,
       getServerList: () => [],
       getServer: () => null,
+      saveServer: async () => ({ ok: true }),
+      editSavedServer: async () => ({ ok: true }),
+      draftTestServer: async () => ({ ok: true }),
+      selectDirectoryDialog: async () => ({ cancelled: false, path: '/tmp' }),
       connectAndSaveServer: async () => ({ ok: true }),
       editAndSaveServer: async () => ({ ok: true }),
       deleteServer: async () => ({ ok: true }),
@@ -143,6 +151,7 @@ await test('browse API uses default mode, path, and language fallbacks', async (
     const docsResponse = await fetch(`http://127.0.0.1:${address.port}/dashboard/docs`);
     const docsHtml = await docsResponse.text();
     assertEqual(docsResponse.status, 200, 'Docs route should render without explicit language');
+    assertTrue(docsHtml.includes('ssh-mcp-universal'), 'Docs should include project title');
     assertTrue(docsHtml.includes('MCP-шлюз для SSH'), 'Docs should default to Russian');
 
     const browseResponse = await fetch(`http://127.0.0.1:${address.port}/api/browse`);
@@ -156,20 +165,50 @@ await test('browse API uses default mode, path, and language fallbacks', async (
   }
 });
 
+await test('select-directory API proxies native chooser result', async () => {
+  const server = await startServer({
+    selectDirectoryDialog: async (currentPath) => ({
+      cancelled: false,
+      path: currentPath || '/tmp/project',
+    })
+  });
+  const address = server.address();
+
+  try {
+    const response = await fetch(`http://127.0.0.1:${address.port}/api/select-directory`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentPath: '/tmp/project' }),
+    });
+    const payload = await response.json();
+
+    assertEqual(response.status, 200, 'Native directory chooser endpoint should return HTTP 200');
+    assertEqual(payload.cancelled, false, 'Should surface non-cancelled result');
+    assertEqual(payload.path, '/tmp/project', 'Should return selected directory path');
+  } finally {
+    await new Promise((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
+  }
+});
+
 await test('dashboard routes render HTML and API key protects mutations', async () => {
   const calls = [];
   const server = await startServer({
     apiKey: 'secret-token',
     getServerList: () => [{ name: 'prod', host: 'example.com', user: 'deploy', port: 22 }],
     getServer: (name) => (name === 'prod' ? { name: 'prod', host: 'example.com', user: 'deploy', port: 22, password: 'secret' } : null),
-    connectAndSaveServer: async (body) => {
+    saveServer: async (body) => {
       calls.push(['connect', body.name]);
       return { ok: true, name: body.name };
     },
-    editAndSaveServer: async (_oldName, body) => {
+    editSavedServer: async (_oldName, body) => {
       calls.push(['edit', body.name]);
       return { ok: true, name: body.name };
     },
+    draftTestServer: async (body) => {
+      calls.push(['test-draft', body.name]);
+      return { ok: true, name: body.name, duration_ms: 11 };
+    },
+    selectDirectoryDialog: async () => ({ cancelled: false, path: '/tmp/project' }),
     deleteServer: async (name) => {
       calls.push(['delete', name]);
       return { ok: true, name };
@@ -187,12 +226,19 @@ await test('dashboard routes render HTML and API key protects mutations', async 
     const dashboardResponse = await fetch(`${baseUrl}/dashboard?lang=ru`);
     const dashboardHtml = await dashboardResponse.text();
     assertEqual(dashboardResponse.status, 200, 'Dashboard page should render');
-    assertTrue(dashboardHtml.includes('MCP-шлюз для SSH'), 'Dashboard should include app title');
+    assertTrue(dashboardHtml.includes('ssh-mcp-universal'), 'Dashboard should include project title');
+    assertTrue(dashboardHtml.includes('MCP-шлюз для SSH'), 'Dashboard should include Russian subtitle');
+    assertTrue(dashboardHtml.includes('→ Подключить'), 'Dashboard should render separate connect button');
+    assertTrue(dashboardHtml.includes('function testEditDraft()'), 'Dashboard should include edit-modal draft test handler');
+    assertTrue(dashboardHtml.includes("openSystemDirectoryDialog('f-default-dir')"), 'Dashboard should use native directory dialog for add form');
+    assertTrue(dashboardHtml.includes('id="f-key-file" type="file"'), 'Dashboard should render file upload selector for SSH key');
 
     const docsResponse = await fetch(`${baseUrl}/dashboard/docs?lang=en`);
     const docsHtml = await docsResponse.text();
     assertEqual(docsResponse.status, 200, 'Docs page should render');
-    assertTrue(docsHtml.includes('MCP Gateway for SSH'), 'Docs should render English title');
+    assertTrue(docsHtml.includes('ssh-mcp-universal'), 'Docs should render project title');
+    assertTrue(docsHtml.includes('MCP Gateway for SSH'), 'Docs should render English subtitle');
+    assertTrue(docsHtml.includes('native browser <code>file input</code>'), 'Docs should describe upload-based SSH key selection');
 
     const notFound = await fetch(`${baseUrl}/missing`);
     const notFoundBody = await notFound.text();
@@ -210,6 +256,11 @@ await test('dashboard routes render HTML and API key protects mutations', async 
     const { payload: statusPayload } = await getJson(`${baseUrl}/api/status`, { headers: authHeaders });
     assertEqual(statusPayload.configured, 1, 'Should report configured server count');
 
+    await getJson(`${baseUrl}/api/test-draft`, {
+      method: 'POST',
+      headers: authHeaders,
+      body: JSON.stringify({ name: 'draft', host: 'example.com', user: 'deploy', password: 'secret' })
+    });
     await getJson(`${baseUrl}/api/connect`, {
       method: 'POST',
       headers: authHeaders,
@@ -239,7 +290,7 @@ await test('dashboard routes render HTML and API key protects mutations', async 
     assertEqual(emptyDelete.status, 500, 'Validation failures should propagate as 500 from generic handler');
     assertTrue(emptyDeletePayload.error.includes('name is required'), 'Should surface delete validation error');
 
-    assertEqual(calls.length, 4, 'Should execute all mutation handlers');
+    assertEqual(calls.length, 5, 'Should execute all mutation handlers');
   } finally {
     await new Promise((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
   }
@@ -253,6 +304,10 @@ await test('server emits error when port is already in use', async () => {
     port: address.port,
     getServerList: () => [],
     getServer: () => null,
+    saveServer: async () => ({ ok: true }),
+    editSavedServer: async () => ({ ok: true }),
+    draftTestServer: async () => ({ ok: true }),
+    selectDirectoryDialog: async () => ({ cancelled: false, path: '/tmp' }),
     connectAndSaveServer: async () => ({ ok: true }),
     editAndSaveServer: async () => ({ ok: true }),
     deleteServer: async () => ({ ok: true }),

@@ -4,7 +4,7 @@
 # This file contains SSH server configurations for MCP SSH Manager
 # when used with OpenAI Codex.
 #
-# For Claude Code users: Use .env format instead (see .env.example)
+# For Claude Code users: use the legacy .env-style server variables instead
 
 # Production Server Example (using SSH key - RECOMMENDED)
 [ssh_servers.production]

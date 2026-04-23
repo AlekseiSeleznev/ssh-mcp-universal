@@ -199,6 +199,11 @@ function resolveAllowedBrowseRoots() {
   return raw.split(path.delimiter).map((item) => item.trim()).filter(Boolean);
 }
 
+function resolveDashboardKeyUploadDir() {
+  const sshManagerHome = process.env.SSH_MANAGER_HOME || path.join(os.homedir(), '.ssh-manager');
+  return path.join(sshManagerHome, 'dashboard-keys');
+}
+
 const envFilePath = resolveEnvFilePath();
 dotenv.config({ path: envFilePath });
 
@@ -4698,8 +4703,12 @@ async function main() {
       port: Number(process.env.SSH_DASHBOARD_PORT || 8791),
       apiKey: process.env.SSH_DASHBOARD_API_KEY || '',
       allowedBrowseRoots: resolveAllowedBrowseRoots(),
+      keyUploadDir: resolveDashboardKeyUploadDir(),
       getServerList: () => configLoader.getAllServers(),
       getServer: (name) => configLoader.getServer(name),
+      saveServer: dashboardService.saveServer,
+      editSavedServer: dashboardService.editSavedServer,
+      draftTestServer: dashboardService.draftTestServer,
       connectAndSaveServer: dashboardService.connectAndSaveServer,
       editAndSaveServer: dashboardService.editAndSaveServer,
       deleteServer: dashboardService.deleteSavedServer,

@@ -52,14 +52,19 @@ console.log('\n' + YELLOW + 'Running Web UI Helper Tests...' + NC + '\n');
 test('renderDashboard injects translated labels and language state', () => {
   const html = renderDashboard('en');
   assertTrue(html.includes('New Connection'), 'Should render English labels');
-  assertTrue(html.includes('MCP Gateway for SSH'), 'Should render app title');
+  assertTrue(html.includes('ssh-mcp-universal'), 'Should render project title');
+  assertTrue(html.includes('MCP Gateway for SSH'), 'Should render English subtitle');
+  assertTrue(html.includes('type="file"'), 'Should render file upload input for SSH key');
+  assertTrue(html.includes('function testEditDraft()'), 'Should include edit-modal draft test handler');
+  assertTrue(html.includes("openSystemDirectoryDialog('f-default-dir')"), 'Should render native OS dialog hook for working directory');
   assertTrue(html.includes('class="on"'), 'Should mark active language tab');
 });
 
 test('renderDashboard falls back to Russian translations for unknown locale', () => {
   const html = renderDashboard('xx');
   assertTrue(html.includes('Новое подключение'), 'Should fall back to Russian labels');
-  assertTrue(html.includes('MCP-шлюз для SSH'), 'Should fall back to Russian title');
+  assertTrue(html.includes('ssh-mcp-universal'), 'Should fall back to project title');
+  assertTrue(html.includes('MCP-шлюз для SSH'), 'Should fall back to Russian subtitle');
 });
 
 test('safeServerForDashboard strips secrets but keeps auth hints', () => {
@@ -115,6 +120,7 @@ test('dashboardStatusSummary aggregates result buckets', () => {
 
 test('renderDocs falls back to Russian locale', () => {
   const html = renderDocs('xx');
+  assertTrue(html.includes('ssh-mcp-universal'), 'Should fall back to project docs');
   assertTrue(html.includes('MCP-шлюз для SSH'), 'Should fall back to Russian docs');
 });
 
@@ -137,11 +143,12 @@ test('errorResponse serializes error payload', () => {
 
 test('mergeSecretFields preserves old secrets when new ones are blank', () => {
   const merged = mergeSecretFields(
-    { password: '', passphrase: '', sudoPassword: '' },
-    { password: 'secret', passphrase: 'key-secret', sudoPassword: 'sudo-secret' }
+    { password: '', keyPath: '', passphrase: '', sudoPassword: '' },
+    { password: 'secret', keyPath: '/keys/id_ed25519', passphrase: 'key-secret', sudoPassword: 'sudo-secret' }
   );
 
   assertEqual(merged.password, 'secret', 'Should preserve password');
+  assertEqual(merged.keyPath, '/keys/id_ed25519', 'Should preserve key path');
   assertEqual(merged.passphrase, 'key-secret', 'Should preserve passphrase');
   assertEqual(merged.sudoPassword, 'sudo-secret', 'Should preserve sudo password');
 });

@@ -76,6 +76,7 @@ export function mergeSecretFields(newConfig, oldConfig) {
   return {
     ...newConfig,
     password: newConfig.password || oldConfig?.password,
+    keyPath: newConfig.keyPath || oldConfig?.keyPath,
     passphrase: newConfig.passphrase || oldConfig?.passphrase,
     sudoPassword: newConfig.sudoPassword || oldConfig?.sudoPassword,
   };
