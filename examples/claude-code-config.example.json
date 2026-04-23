@@ -1,0 +1,40 @@
+{
+  "apiKey": "your-anthropic-api-key-here",
+  "mcpServers": {
+    "ssh-universal": {
+      "command": "node",
+      "args": ["/path/to/ssh-mcp-universal/src/index.js"],
+      "autoApprove": [
+        "mcp__ssh-universal__ssh_execute",
+        "mcp__ssh-universal__ssh_list_servers",
+        "mcp__ssh-universal__ssh_upload",
+        "mcp__ssh-universal__ssh_download",
+        "mcp__ssh-universal__ssh_sync",
+        "mcp__ssh-universal__ssh_alias",
+        "mcp__ssh-universal__ssh_deploy",
+        "mcp__ssh-universal__ssh_execute_sudo",
+        "mcp__ssh-universal__ssh_tunnel_create",
+        "mcp__ssh-universal__ssh_tunnel_list",
+        "mcp__ssh-universal__ssh_tunnel_close",
+        "mcp__ssh-universal__ssh_session_start",
+        "mcp__ssh-universal__ssh_session_send",
+        "mcp__ssh-universal__ssh_session_list",
+        "mcp__ssh-universal__ssh_session_close",
+        "mcp__ssh-universal__ssh_execute_group",
+        "mcp__ssh-universal__ssh_group_manage",
+        "mcp__ssh-universal__ssh_tail",
+        "mcp__ssh-universal__ssh_monitor",
+        "mcp__ssh-universal__ssh_history",
+        "mcp__ssh-universal__ssh_connection_status",
+        "mcp__ssh-universal__ssh_key_manage",
+        "mcp__ssh-universal__ssh_command_alias",
+        "mcp__ssh-universal__ssh_hooks",
+        "mcp__ssh-universal__ssh_profile"
+      ]
+    },
+    "example-other-server": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    }
+  }
+}
