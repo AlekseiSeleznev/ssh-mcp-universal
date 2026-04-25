@@ -65,7 +65,10 @@ async function testServerConnection(serverName) {
   if (!serverConfig) {
     throw new Error(`Server "${normalizedName}" not found.`);
   }
-  const ssh = new SSHManager(serverConfig);
+  const ssh = new SSHManager({
+    ...serverConfig,
+    autoAcceptHostKey: true
+  });
   try {
     await ssh.connect();
     await ssh.ping();

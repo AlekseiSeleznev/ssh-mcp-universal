@@ -442,7 +442,7 @@ function cleanupOldConnections() {
 }
 
 // Get or create SSH connection with reconnection support
-async function getConnection(serverName) {
+async function getConnection(serverName, options = {}) {
   const servers = loadServerConfig();
 
   // Execute pre-connect hook
@@ -482,7 +482,10 @@ async function getConnection(serverName) {
   }
 
   // Create new connection
-  const serverConfig = servers[normalizedName];
+  const serverConfig = {
+    ...servers[normalizedName],
+    ...(options.autoAcceptHostKey ? { autoAcceptHostKey: true } : {})
+  };
   const ssh = new SSHManager(serverConfig);
 
   try {
@@ -509,7 +512,7 @@ async function getConnection(serverName) {
       }
 
       // Connect to jump server (recursive — handles chained jumps)
-      const jumpSSH = await getConnection(serverConfig.proxyJump);
+      const jumpSSH = await getConnection(serverConfig.proxyJump, options);
 
       // Create forwarded stream through the jump server
       const stream = await jumpSSH.forwardOut(
@@ -554,7 +557,7 @@ async function testServerConnection(serverName) {
   const normalizedName = serverName.toLowerCase();
   try {
     const startTime = Date.now();
-    const ssh = await getConnection(normalizedName);
+    const ssh = await getConnection(normalizedName, { autoAcceptHostKey: true });
     closeConnection(normalizedName);
     return { ok: true, name: normalizedName, duration_ms: Date.now() - startTime };
   } catch (error) {
