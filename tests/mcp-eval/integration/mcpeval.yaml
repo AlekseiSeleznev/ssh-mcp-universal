@@ -1,0 +1,35 @@
+$schema: ../../../schema/mcpeval.config.schema.json
+name: "ssh-mcp-universal integration evals"
+description: "Gated evals for a real disposable SSH fixture connection."
+
+mcp:
+  servers:
+    ssh_universal:
+      command: "node"
+      args: ["/home/as/Документы/AI_PROJECTS/ssh-mcp-universal/src/index.js"]
+
+default_agent: "default"
+agents:
+  definitions:
+    - name: "default"
+      instruction: |
+        You are evaluating ssh-mcp-universal against a disposable test SSH
+        fixture. Use ssh_list_servers before any connection-specific action.
+        Do not run destructive commands.
+      server_names: ["ssh_universal"]
+      max_iterations: 1
+
+metrics:
+  collect:
+    - "response_time"
+    - "tool_coverage"
+
+reporting:
+  formats: ["json", "markdown"]
+  output_dir: "./test-reports"
+  include_traces: true
+
+execution:
+  max_concurrency: 1
+  timeout_seconds: 90
+  retry_failed: false

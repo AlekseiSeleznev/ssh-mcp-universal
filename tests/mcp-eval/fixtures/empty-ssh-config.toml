@@ -1,0 +1,3 @@
+# Safe mcp-eval inventory fixture.
+# Keep empty: this proves the MCP server reports unavailable connections instead of inventing hosts.
+[ssh_servers]

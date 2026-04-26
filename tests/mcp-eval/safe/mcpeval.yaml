@@ -1,0 +1,40 @@
+$schema: ../../../schema/mcpeval.config.schema.json
+name: "ssh-mcp-universal safe evals"
+description: "Deterministic local evals for the stdio SSH MCP server without real SSH targets."
+
+mcp:
+  servers:
+    ssh_universal:
+      command: "node"
+      args: ["/home/as/Документы/AI_PROJECTS/ssh-mcp-universal/src/index.js"]
+      env:
+        SSH_CONFIG_PATH: "/home/as/Документы/AI_PROJECTS/ssh-mcp-universal/tests/mcp-eval/fixtures/empty-ssh-config.toml"
+        HOME: "/home/as/Документы/AI_PROJECTS/ssh-mcp-universal/tests/mcp-eval/fixtures/home"
+
+default_agent: "default"
+agents:
+  definitions:
+    - name: "default"
+      instruction: |
+        You are evaluating ssh-mcp-universal. Always discover configured SSH
+        connections with ssh_list_servers before attempting an action against a
+        connection name. Never invent SSH hosts, SAP systems, NiFi endpoints,
+        database names, usernames, passwords, private keys, or connection names.
+        If no backend or connection exists, report the real unavailability.
+      server_names: ["ssh_universal"]
+      max_iterations: 1
+
+metrics:
+  collect:
+    - "response_time"
+    - "tool_coverage"
+
+reporting:
+  formats: ["json", "markdown"]
+  output_dir: "./test-reports"
+  include_traces: true
+
+execution:
+  max_concurrency: 1
+  timeout_seconds: 60
+  retry_failed: false
