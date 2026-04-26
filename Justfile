@@ -5,7 +5,7 @@ mcpeval_dir := "/home/as/Документы/AI_PROJECTS/lastmile-ai-mcp-eval"
 pwsh := "/home/as/Документы/AI_PROJECTS/PowerShell-PowerShell/runtime-7.6.1-linux-x64/pwsh"
 
 default:
-    @echo "Available: test, validate, mcp-init, mcp-tools-list, mcp-conformance, mcp-inspector-tools, mcp-eval, mcp-eval-integration, pwsh-version, smoke"
+    @echo "Available: test, validate, mcp-init, mcp-tools-list, mcp-conformance, mcp-inspector-tools, mcp-eval, mcp-eval-integration, pwsh-version, pwsh-smoke, smoke"
 
 test:
     npm test
@@ -44,5 +44,8 @@ mcp-eval-integration path="tests/mcp-eval/integration":
 
 pwsh-version:
     @"{{pwsh}}" -NoLogo -NoProfile -Command '$PSVersionTable.PSVersion.ToString()'
+
+pwsh-smoke:
+    @"{{pwsh}}" -NoLogo -NoProfile -File tests/smoke/mcp-smoke.ps1
 
 smoke: mcp-tools-list
